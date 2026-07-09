@@ -5,3 +5,6 @@ dist
 .env.*
 !.env.example
 .DS_Store
+
+# Supabase CLI local state (nao versionar)
+supabase/.temp
