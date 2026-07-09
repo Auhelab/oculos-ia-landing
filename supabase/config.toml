@@ -1,0 +1,13 @@
+project_id = "landing-page-produto"
+
+[functions.create-order]
+# Chamada pelo frontend com a anon key — exige verificação de JWT padrão.
+verify_jwt = true
+
+[functions.process-payment]
+verify_jwt = true
+
+[functions.mp-webhook]
+# O Mercado Pago chama esta URL sem JWT. A autenticidade é garantida pela
+# validação da assinatura x-signature (HMAC com MP_WEBHOOK_SECRET), não por JWT.
+verify_jwt = false
