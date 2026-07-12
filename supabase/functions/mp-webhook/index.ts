@@ -6,6 +6,7 @@
 
 import { jsonResponse } from "../_shared/cors.ts";
 import { createAdminClient } from "../_shared/supabase.ts";
+import { sendPaidEmailOnce } from "../_shared/order-mailer.ts";
 
 const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 const MP_WEBHOOK_SECRET = Deno.env.get("MP_WEBHOOK_SECRET");
@@ -68,16 +69,23 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createAdminClient();
+    const mappedStatus = mapMpStatus(status);
     const { error } = await supabase
       .from("orders")
       .update({
-        status: mapMpStatus(status),
+        status: mappedStatus,
         mp_status_detail: statusDetail,
         mp_payment_id: String(payment.id ?? dataId),
       })
       .eq("id", externalReference);
 
     if (error) throw error;
+
+    // Confirmação assíncrona de pagamento (ex.: Pix pago). Dispara a
+    // confirmação por e-mail de forma idempotente.
+    if (mappedStatus === "paid") {
+      await sendPaidEmailOnce(supabase, externalReference);
+    }
 
     return jsonResponse({ received: true });
   } catch (error) {

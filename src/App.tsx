@@ -9,11 +9,13 @@ import Footer from "./components/Footer";
 import TermsOfUse from "./pages/TermsOfUse";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ThankYou from "./pages/ThankYou";
+import TrackOrder from "./pages/TrackOrder";
+import AdminDashboard from "./pages/AdminDashboard";
 
 /**
- * Roteamento mínimo por hash (#/termos, #/privacidade) para as páginas legais,
- * sem adicionar react-router. Âncoras de seção (#checkout, #beneficios)
- * continuam funcionando na rota padrão.
+ * Roteamento mínimo por hash (#/termos, #/privacidade, #/rastreio, #/admin)
+ * para as páginas fora da landing, sem adicionar react-router. Âncoras de
+ * seção (#checkout, #beneficios) continuam funcionando na rota padrão.
  */
 function useHashRoute(): string {
   const [hash, setHash] = useState(() => window.location.hash);
@@ -50,6 +52,10 @@ export default function App() {
         <PrivacyPolicy />
       ) : route === "#/obrigado" ? (
         <ThankYou />
+      ) : route.startsWith("#/rastreio") ? (
+        <TrackOrder />
+      ) : route.startsWith("#/admin") ? (
+        <AdminDashboard />
       ) : (
         <main>
           <Hero />

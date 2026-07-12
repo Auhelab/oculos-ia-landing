@@ -6,6 +6,7 @@
 
 import { handlePreflight, jsonResponse } from "../_shared/cors.ts";
 import { createAdminClient } from "../_shared/supabase.ts";
+import { sendPaidEmailOnce } from "../_shared/order-mailer.ts";
 
 const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 
@@ -101,6 +102,12 @@ Deno.serve(async (req) => {
         status: nextStatus,
       })
       .eq("id", order.id);
+
+    // Pagamento aprovado de imediato (ex.: cartão): dispara a confirmação por
+    // e-mail. É idempotente — o webhook, se chegar depois, não reenvia.
+    if (nextStatus === "paid") {
+      await sendPaidEmailOnce(supabase, order.id);
+    }
 
     // Dados do Pix (QR code + copia-e-cola), quando aplicável.
     const poi = payment.point_of_interaction as

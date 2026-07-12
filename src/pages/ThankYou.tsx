@@ -45,9 +45,17 @@ export default function ThankYou() {
             <span className="font-mono font-semibold text-white">{orderId}</span>
           </p>
         )}
-        <a href="#/" className="btn-gradient mt-8 inline-block px-8 py-3.5 text-base">
-          Voltar à loja
-        </a>
+        <div className="mt-8 flex flex-col items-center gap-3">
+          <a
+            href={orderId ? `#/rastreio?pedido=${encodeURIComponent(orderId)}` : "#/rastreio"}
+            className="btn-gradient inline-block px-8 py-3.5 text-base"
+          >
+            Rastrear meu pedido
+          </a>
+          <a href="#/" className="text-sm text-white/55 transition hover:text-white">
+            Voltar à loja
+          </a>
+        </div>
       </div>
     </main>
   );

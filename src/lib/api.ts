@@ -45,7 +45,11 @@ export interface ProcessPaymentResult {
 /** Erro com mensagem já pronta para exibição ao usuário. */
 export class ApiError extends Error {}
 
-async function postFunction<T>(name: string, body: unknown): Promise<T> {
+async function postFunction<T>(
+  name: string,
+  body: unknown,
+  extraHeaders?: Record<string, string>,
+): Promise<T> {
   let response: Response;
   try {
     response = await fetch(functionsUrl(name), {
@@ -54,6 +58,7 @@ async function postFunction<T>(name: string, body: unknown): Promise<T> {
         "Content-Type": "application/json",
         Authorization: `Bearer ${env.supabaseAnonKey}`,
         apikey: env.supabaseAnonKey,
+        ...extraHeaders,
       },
       body: JSON.stringify(body),
     });
@@ -88,4 +93,89 @@ export function processPayment(
   formData: unknown,
 ): Promise<ProcessPaymentResult> {
   return postFunction<ProcessPaymentResult>("process-payment", { orderId, formData });
+}
+
+// ---------------------------------------------------------------------------
+// Rastreio do pedido (cliente) — função track-order.
+// ---------------------------------------------------------------------------
+
+export interface TrackResult {
+  orderId: string;
+  status: string;
+  amountCents: number;
+  createdAt: string;
+  shippedAt: string | null;
+  trackingCode: string | null;
+  trackingUrl: string | null;
+}
+
+export function trackOrder(orderId: string, email: string): Promise<TrackResult> {
+  return postFunction<TrackResult>("track-order", { orderId, email });
+}
+
+// ---------------------------------------------------------------------------
+// Painel administrativo — função admin-orders (autenticada por x-admin-key).
+// ---------------------------------------------------------------------------
+
+export interface AdminOrder {
+  id: string;
+  status: string;
+  mp_status_detail: string | null;
+  payment_method: string | null;
+  amount_cents: number;
+  created_at: string;
+  updated_at: string;
+  customer_name: string;
+  customer_email: string;
+  customer_whatsapp: string;
+  customer_cpf: string;
+  address_street: string;
+  address_number: string;
+  address_complement: string | null;
+  address_neighborhood: string;
+  address_city: string;
+  address_state: string;
+  address_cep: string;
+  tracking_code: string | null;
+  tracking_url: string | null;
+  shipped_at: string | null;
+}
+
+function adminHeaders(adminKey: string): Record<string, string> {
+  return { "x-admin-key": adminKey };
+}
+
+export function adminListOrders(
+  adminKey: string,
+  status?: string,
+): Promise<{ orders: AdminOrder[] }> {
+  return postFunction<{ orders: AdminOrder[] }>(
+    "admin-orders",
+    { action: "list", status },
+    adminHeaders(adminKey),
+  );
+}
+
+export function adminShipOrder(
+  adminKey: string,
+  orderId: string,
+  trackingCode: string,
+  trackingUrl?: string,
+): Promise<{ ok: true }> {
+  return postFunction<{ ok: true }>(
+    "admin-orders",
+    { action: "ship", orderId, trackingCode, trackingUrl },
+    adminHeaders(adminKey),
+  );
+}
+
+export function adminDeliverOrder(
+  adminKey: string,
+  orderId: string,
+): Promise<{ ok: true }> {
+  return postFunction<{ ok: true }>(
+    "admin-orders",
+    { action: "deliver", orderId },
+    adminHeaders(adminKey),
+  );
 }

@@ -11,3 +11,13 @@ verify_jwt = true
 # O Mercado Pago chama esta URL sem JWT. A autenticidade é garantida pela
 # validação da assinatura x-signature (HMAC com MP_WEBHOOK_SECRET), não por JWT.
 verify_jwt = false
+
+[functions.admin-orders]
+# Painel admin: a autenticação é a própria ADMIN_API_KEY (header x-admin-key),
+# validada dentro da função em tempo constante — não usa o JWT do Supabase.
+verify_jwt = false
+
+[functions.track-order]
+# Rastreio público: o frontend chama com a anon key (como create-order).
+# A proteção anti-enumeração é o par pedido+e-mail exigido no corpo.
+verify_jwt = true
