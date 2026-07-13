@@ -1,79 +1,73 @@
 import { product } from "../config/product";
 import { formatBRL, installmentCents } from "../lib/money";
 
-const highlights = ["Frete grátis", "12x sem juros", "Envio rastreado"];
-
 export default function Hero() {
-  const heroImage = product.images[0];
   const installment = formatBRL(installmentCents(product.priceCents, product.maxInstallments));
 
   return (
-    <section className="relative overflow-hidden">
-      <div className="relative mx-auto flex min-h-[92svh] max-w-page flex-col items-center px-6 pb-16 pt-24 text-center sm:pt-28">
-        <p
-          className="glass-pill animate-fade-up px-5 py-2 text-xs font-semibold uppercase tracking-[0.3em] text-cyan-300"
-          style={{ animationDelay: "0ms" }}
-        >
-          Lançamento 2026
+    <section className="overflow-hidden">
+      <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-page flex-col items-center justify-center px-6 py-16 text-center">
+        <p className="eyebrow animate-fade-up" style={{ animationDelay: "0ms" }}>
+          Novo · Lançamento 2026
         </p>
 
         <h1
-          className="animate-fade-up mt-6 font-display text-4xl font-black leading-[1.04] tracking-[-0.03em] sm:text-6xl lg:text-7xl"
-          style={{ animationDelay: "120ms" }}
+          className="animate-fade-up mt-4 max-w-3xl text-[2.75rem] font-bold leading-[1.05] tracking-[-0.03em] sm:text-6xl lg:text-7xl"
+          style={{ animationDelay: "100ms" }}
         >
           {product.name}
         </h1>
 
         <p
-          className="animate-fade-up mt-5 max-w-xl text-lg text-white/65 sm:text-2xl"
-          style={{ animationDelay: "240ms" }}
+          className="animate-fade-up mt-5 max-w-2xl text-lg text-ink-soft sm:text-2xl"
+          style={{ animationDelay: "200ms" }}
         >
           {product.tagline}
         </p>
 
         <div
-          className="animate-fade-up mt-8 flex flex-col items-center gap-4 sm:flex-row"
+          className="animate-fade-up mt-8 flex flex-col items-center gap-5 sm:flex-row"
+          style={{ animationDelay: "300ms" }}
+        >
+          <a href="#checkout" className="btn-primary px-8">
+            Comprar
+          </a>
+          <a href="#recursos" className="btn-quiet">
+            Ver recursos
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className="h-4 w-4"
+              aria-hidden="true"
+            >
+              <path d="M6 9l6 6 6-6" />
+            </svg>
+          </a>
+        </div>
+
+        <p
+          className="animate-fade-up mt-4 text-sm text-ink-soft"
           style={{ animationDelay: "360ms" }}
         >
-          <a href="#checkout" className="btn-gradient px-9 py-4 text-base">
-            Comprar agora
-          </a>
-          <p className="text-sm text-white/60">
-            {formatBRL(product.priceCents)} ou {product.maxInstallments}x de {installment}
-          </p>
-        </div>
+          {formatBRL(product.priceCents)} ou {product.maxInstallments}x de {installment} sem
+          juros · Frete grátis
+        </p>
 
-        <ul
-          className="animate-fade-up mt-8 flex flex-wrap items-center justify-center gap-3"
-          style={{ animationDelay: "480ms" }}
+        {/* Sem imagem estática aqui: o produto aparece uma única vez, girando,
+            quando o scroll entra no SpinShowcase logo abaixo. */}
+        <span
+          aria-hidden="true"
+          className="animate-fade-up mt-10 text-ink-soft"
+          style={{ animationDelay: "560ms" }}
         >
-          {highlights.map((item) => (
-            <li key={item} className="glass-pill px-4 py-1.5 text-sm text-white/75">
-              {item}
-            </li>
-          ))}
-        </ul>
-
-        <div
-          className="animate-fade-up relative mt-10 w-full max-w-2xl"
-          style={{ animationDelay: "600ms" }}
-        >
-          <img
-            src={heroImage.src}
-            alt={heroImage.alt}
-            width={800}
-            height={480}
-            className="w-full drop-shadow-[0_40px_60px_rgba(0,0,0,0.55)]"
-          />
-        </div>
-
-        <a
-          href="#beneficios"
-          className="animate-fade-up mt-6 text-sm font-medium text-cyan-300 hover:underline"
-          style={{ animationDelay: "720ms" }}
-        >
-          Saiba mais ↓
-        </a>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6 animate-bounce">
+            <path d="M12 5v14M6 13l6 6 6-6" />
+          </svg>
+        </span>
       </div>
     </section>
   );

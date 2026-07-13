@@ -12,19 +12,19 @@ export default function Offer() {
   const installment = formatBRL(installmentCents(product.priceCents, product.maxInstallments));
 
   return (
-    <section className="py-20 sm:py-28">
+    <section id="oferta" className="py-24 sm:py-32">
       <div className="mx-auto grid max-w-page items-center gap-12 px-6 lg:grid-cols-2">
-        <div>
-          <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
+        <div data-reveal>
+          <h2 className="text-3xl font-bold tracking-[-0.02em] sm:text-5xl">
             Oferta de lançamento.
           </h2>
-          <p className="mt-3 max-w-md text-lg text-white/60">
+          <p className="mt-3 max-w-md text-lg text-ink-soft">
             Preço promocional válido enquanto durar o estoque desta remessa.
           </p>
 
           <ul className="mt-8 space-y-3">
             {perks.map((perk) => (
-              <li key={perk} className="flex items-center gap-3 text-white/85">
+              <li key={perk} className="flex items-center gap-3 text-ink">
                 <svg
                   viewBox="0 0 24 24"
                   fill="none"
@@ -32,7 +32,7 @@ export default function Offer() {
                   strokeWidth={2.2}
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="h-5 w-5 shrink-0 text-cyan-300"
+                  className="h-5 w-5 shrink-0 text-accent"
                   aria-hidden="true"
                 >
                   <path d="M4.5 12.5l5 5L19.5 7" />
@@ -43,45 +43,44 @@ export default function Offer() {
           </ul>
         </div>
 
-        <div className="glass relative overflow-hidden p-8 sm:p-10">
-          {/* reflexo diagonal no vidro */}
-          <div
-            aria-hidden="true"
-            className="pointer-events-none absolute -right-24 -top-24 h-64 w-64 rounded-full bg-gradient-to-br from-cyan-400/25 to-violet-500/20 blur-3xl"
-          />
-
+        <div
+          data-reveal
+          style={{ transitionDelay: "120ms" }}
+          className="card-white p-8 shadow-[0_12px_48px_rgba(0,0,0,0.08)] sm:p-10"
+        >
           {product.stockLeft !== null && (
-            <p className="relative inline-flex items-center gap-2 rounded-full border border-amber-300/20 bg-amber-400/15 px-4 py-1.5 text-sm font-semibold text-amber-300 backdrop-blur-md">
+            <p className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-sm font-semibold text-amber-700">
               <span aria-hidden="true">⚡</span>
               Restam apenas {product.stockLeft} unidades
             </p>
           )}
 
-          <p className="relative mt-6 text-sm uppercase tracking-[0.25em] text-white/50">
-            {product.name}
-          </p>
+          <p className="eyebrow mt-6">{product.name}</p>
 
-          <div className="relative mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
             {product.compareAtPriceCents !== null && (
-              <span className="text-lg text-white/40 line-through">
+              <span className="text-lg text-ink-soft line-through">
                 {formatBRL(product.compareAtPriceCents)}
               </span>
             )}
-            <span className="font-display text-5xl font-black tracking-tight sm:text-6xl">
+            <span className="text-5xl font-bold tracking-[-0.02em] sm:text-6xl">
               {formatBRL(product.priceCents)}
             </span>
           </div>
 
-          <p className="relative mt-2 text-white/70">
-            ou <strong className="text-white">{product.maxInstallments}x de {installment}</strong>{" "}
+          <p className="mt-2 text-ink-soft">
+            ou{" "}
+            <strong className="font-semibold text-ink">
+              {product.maxInstallments}x de {installment}
+            </strong>{" "}
             sem juros no cartão
           </p>
 
-          <a href="#checkout" className="btn-gradient relative mt-8 block px-8 py-4 text-center text-base">
+          <a href="#checkout" className="btn-primary mt-8 w-full px-8 py-4 text-base">
             Garantir o meu
           </a>
 
-          <p className="relative mt-4 text-center text-xs text-white/45">
+          <p className="mt-4 text-center text-xs text-ink-soft">
             Você não será cobrado agora — o pagamento é confirmado na próxima etapa.
           </p>
         </div>

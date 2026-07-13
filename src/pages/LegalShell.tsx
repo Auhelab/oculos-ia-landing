@@ -11,31 +11,30 @@ interface LegalShellProps {
 export default function LegalShell({ title, children }: LegalShellProps) {
   useEffect(() => {
     document.title = `${title} | ${product.name}`;
-    window.scrollTo(0, 0);
+    // "instant" para não herdar o scroll-behavior:smooth do html
+    window.scrollTo({ top: 0, behavior: "instant" });
   }, [title]);
 
   return (
-    <main className="min-h-screen">
-      <header className="border-b border-white/10 bg-white/[0.04] py-6 backdrop-blur-xl">
+    <main className="min-h-screen bg-white">
+      <header className="border-b border-line-soft bg-white/80 py-5 backdrop-blur-xl">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-6">
-          <a href="#/" className="font-display text-lg font-bold tracking-tight text-white">
+          <a href="#/" className="text-[15px] font-semibold tracking-tight text-ink">
             {product.name}
           </a>
-          <a href="#/" className="text-sm text-white/60 transition hover:text-white">
+          <a href="#/" className="text-sm text-ink-soft transition hover:text-ink">
             ← Voltar à loja
           </a>
         </div>
       </header>
 
       <article className="mx-auto max-w-3xl px-6 py-14">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight sm:text-4xl">
-          {title}
-        </h1>
-        <p className="mt-2 text-sm text-white/45">
+        <h1 className="text-3xl font-bold tracking-[-0.02em] sm:text-4xl">{title}</h1>
+        <p className="mt-2 text-sm text-ink-soft">
           Última atualização: julho de 2026 · Documento placeholder — substituir pelo texto
           jurídico definitivo antes do lançamento.
         </p>
-        <div className="glass mt-8 space-y-6 p-6 text-[15px] leading-relaxed text-white/70 sm:p-10">
+        <div className="mt-10 space-y-8 text-[15px] leading-relaxed text-ink-soft">
           {children}
         </div>
       </article>

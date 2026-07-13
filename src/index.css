@@ -2,38 +2,83 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Lenis smooth-scroll — quando ativo (classe .lenis-smooth no <html>), sobrepõe
+   o scroll-behavior:smooth do CSS pra os dois não brigarem. Sob
+   prefers-reduced-motion o Lenis nem inicializa, então o smooth nativo/auto vale. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
+:root {
+  /* Assinatura de timing Apple (destilada do AirPods Pro) */
+  --ease-apple: cubic-bezier(0.4, 0, 0.6, 1);
+  --dur-micro: 0.32s;
+  --dur-base: 0.24s;
+}
+
 @layer base {
   html {
     scroll-behavior: smooth;
   }
 
   body {
-    @apply bg-night font-sans text-white antialiased;
+    @apply bg-white font-sans text-ink antialiased;
   }
 
   ::selection {
-    @apply bg-cyan-400 text-night;
+    @apply bg-ink text-white;
   }
 
   :focus-visible {
-    @apply outline-none ring-2 ring-cyan-300 ring-offset-2 ring-offset-night;
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-white;
+  }
+
+  /* Âncoras (#recursos, #checkout…) param abaixo da nav fixa */
+  section[id] {
+    scroll-margin-top: 5rem;
   }
 }
 
 @layer components {
-  /* Painel de vidro fosco — base do glassmorfismo */
-  .glass {
-    @apply rounded-3xl border border-white/15 bg-white/[0.07] shadow-[0_8px_32px_rgba(0,0,0,0.35)] backdrop-blur-xl;
+  /* Botão primário — pílula azul, única cor de ação do site */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-[15px] font-semibold text-white transition hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+    transition-timing-function: var(--ease-apple);
+    transition-duration: var(--dur-base);
   }
 
-  /* Chip/pill de vidro para badges */
-  .glass-pill {
-    @apply rounded-full border border-white/15 bg-white/[0.08] backdrop-blur-md;
+  /* Ação secundária discreta ("Saiba mais ›") */
+  .btn-quiet {
+    @apply inline-flex items-center gap-1.5 text-[15px] font-medium text-accent transition hover:opacity-70;
+    transition-timing-function: var(--ease-apple);
+    transition-duration: var(--dur-base);
   }
 
-  /* Botão principal com gradiente */
-  .btn-gradient {
-    @apply rounded-full bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500 font-semibold text-white shadow-lg shadow-blue-500/30 transition hover:brightness-110;
+  /* Tile cinza-claro (bento Apple) */
+  .card {
+    @apply rounded-3xl bg-haze;
+  }
+
+  /* Card branco elevado sobre fundo haze */
+  .card-white {
+    @apply rounded-3xl border border-line-soft bg-white shadow-[0_2px_20px_rgba(0,0,0,0.04)];
+  }
+
+  .eyebrow {
+    @apply text-[13px] font-semibold uppercase tracking-[0.18em] text-ink-soft;
   }
 }
 
@@ -52,6 +97,20 @@
   .animate-fade-up {
     animation: fade-up 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+
+  /* Reveal on scroll — o estado escondido só existe com JS ativo (classe .js no <html>) */
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1),
+      transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .js [data-reveal].is-revealed {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -65,5 +124,10 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+
+  .js [data-reveal] {
+    opacity: 1;
+    transform: none;
   }
 }

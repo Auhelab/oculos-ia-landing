@@ -7,7 +7,7 @@ interface Benefit {
 }
 
 const iconProps = {
-  className: "h-7 w-7",
+  className: "h-6 w-6",
   fill: "none",
   stroke: "currentColor",
   strokeWidth: 1.8,
@@ -67,28 +67,27 @@ const benefits: Benefit[] = [
 
 export default function Benefits() {
   return (
-    <section id="beneficios" className="py-20 sm:py-28">
+    <section id="recursos" className="py-24 sm:py-32">
       <div className="mx-auto max-w-page px-6">
-        <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
-          Por que você vai amar.
-        </h2>
-        <p className="mt-3 max-w-2xl text-lg text-white/60">
-          Tecnologia de ponta em cada detalhe — da lente ao som.
-        </p>
+        <div data-reveal>
+          <h2 className="max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-5xl">
+            Tecnologia de ponta. <span className="text-ink-soft">Em cada detalhe.</span>
+          </h2>
+        </div>
 
-        <ul className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {benefits.map((benefit) => (
+        <ul className="mt-12 grid gap-5 sm:grid-cols-2">
+          {benefits.map((benefit, index) => (
             <li
               key={benefit.title}
-              className="glass group p-8 transition duration-300 hover:-translate-y-1 hover:bg-white/[0.12]"
+              data-reveal
+              style={{ transitionDelay: `${index * 80}ms` }}
+              className="card p-8 sm:p-10"
             >
-              <span className="inline-flex rounded-2xl border border-white/10 bg-gradient-to-br from-cyan-400/20 to-violet-500/20 p-3 text-cyan-300 transition group-hover:from-cyan-400/40 group-hover:to-violet-500/40">
+              <span className="inline-flex rounded-full bg-white p-3 text-accent shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
                 {benefit.icon}
               </span>
-              <h3 className="mt-5 font-display text-xl font-bold tracking-tight">
-                {benefit.title}
-              </h3>
-              <p className="mt-2 text-[15px] leading-relaxed text-white/60">
+              <h3 className="mt-6 text-xl font-semibold tracking-tight">{benefit.title}</h3>
+              <p className="mt-2 max-w-md text-[15px] leading-relaxed text-ink-soft">
                 {benefit.description}
               </p>
             </li>

@@ -5,11 +5,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        /* Fundo base do tema glassmorphism */
-        night: "#070b1a",
+        /* Sistema de cores light (referência Apple) */
+        ink: "#1d1d1f", // texto primário
+        "ink-soft": "#6e6e73", // texto secundário
+        haze: "#f5f5f7", // superfície cinza-clara (seções e tiles)
+        line: "#d2d2d7", // borda de inputs
+        "line-soft": "#e8e8ed", // bordas e divisores sutis
+        accent: "#0071e3", // única cor de ação
+        "accent-hover": "#0077ed",
       },
       fontFamily: {
-        display: ['"Schibsted Grotesk"', "system-ui", "sans-serif"],
         sans: ['"Instrument Sans"', "system-ui", "sans-serif"],
       },
       maxWidth: {

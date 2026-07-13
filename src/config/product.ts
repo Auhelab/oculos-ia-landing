@@ -29,7 +29,7 @@ export const product: ProductConfig = {
   stockLeft: 23,
   images: [
     {
-      src: "/images/product-hero.svg",
+      src: "/images/product-hero.jpg",
       alt: "Óculos inteligentes pretos com câmera integrada na armação",
     },
   ],

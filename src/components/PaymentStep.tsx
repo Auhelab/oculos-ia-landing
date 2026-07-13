@@ -94,39 +94,39 @@ export default function PaymentStep({
   if (result.kind === "pix") {
     return (
       <div className="text-center">
-        <h3 className="font-display text-2xl font-extrabold tracking-tight">
+        <h3 className="text-2xl font-bold tracking-tight">
           Quase lá! Pague com Pix
         </h3>
-        <p className="mt-2 text-sm text-white/60">
+        <p className="mt-2 text-sm text-ink-soft">
           Escaneie o QR code ou use o copia-e-cola. A confirmação é automática.
         </p>
         {result.pix.qrCodeBase64 && (
           <img
             src={`data:image/png;base64,${result.pix.qrCodeBase64}`}
             alt="QR code do Pix"
-            className="mx-auto mt-6 w-56 rounded-2xl border border-white/15 bg-white p-3"
+            className="mx-auto mt-6 w-56 rounded-2xl border border-line-soft bg-white p-3"
           />
         )}
         <div className="mt-6 text-left">
-          <label className="mb-1.5 block text-sm font-semibold text-white">
+          <label className="mb-1.5 block text-sm font-medium text-ink">
             Pix copia-e-cola
           </label>
           <div className="flex gap-2">
             <input
               readOnly
               value={result.pix.qrCode}
-              className="w-full rounded-xl border border-white/20 bg-white/[0.06] px-4 py-3 text-xs text-white/70"
+              className="w-full rounded-xl border border-line bg-haze px-4 py-3 text-xs text-ink-soft"
             />
             <button
               type="button"
               onClick={() => void copyPixCode(result.pix.qrCode)}
-              className="btn-gradient shrink-0 px-5 text-sm"
+              className="btn-primary shrink-0 px-5 text-sm"
             >
               {copied ? "Copiado!" : "Copiar"}
             </button>
           </div>
         </div>
-        <p className="mt-6 rounded-xl border border-white/10 bg-white/[0.05] p-3 text-xs text-white/55">
+        <p className="mt-6 rounded-xl bg-haze p-3 text-xs text-ink-soft">
           Assim que o pagamento for confirmado, você receberá a atualização do pedido por e-mail.
         </p>
       </div>
@@ -136,24 +136,24 @@ export default function PaymentStep({
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h3 className="font-display text-xl font-bold tracking-tight">Pagamento</h3>
+        <h3 className="text-xl font-semibold tracking-tight">Pagamento</h3>
         <button
           type="button"
           onClick={onBack}
-          className="text-sm text-white/55 transition hover:text-white"
+          className="text-sm text-ink-soft transition hover:text-ink"
         >
           ← Editar dados
         </button>
       </div>
-      <p className="mt-1 text-sm text-white/60">
+      <p className="mt-1 text-sm text-ink-soft">
         Total a pagar:{" "}
-        <span className="font-semibold text-white">{formatBRL(amountCents)}</span>
+        <span className="font-semibold text-ink">{formatBRL(amountCents)}</span>
       </p>
 
       {result.kind === "rejected" && (
         <p
           role="alert"
-          className="mt-4 rounded-xl border border-rose-400/30 bg-rose-400/10 p-4 text-sm font-medium text-rose-200"
+          className="mt-4 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
         >
           {result.detail} Você pode tentar novamente abaixo.
         </p>
@@ -161,7 +161,7 @@ export default function PaymentStep({
       {result.kind === "pending" && (
         <p
           role="status"
-          className="mt-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-4 text-sm font-medium text-amber-200"
+          className="mt-4 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-700"
         >
           Seu pagamento está em análise. Avisaremos por e-mail assim que for confirmado.
         </p>
@@ -176,7 +176,7 @@ export default function PaymentStep({
               debitCard: "all",
               bankTransfer: "all",
             },
-            visual: { style: { theme: "dark" } },
+            visual: { style: { theme: "default" } },
           }}
           onSubmit={handleSubmit}
         />

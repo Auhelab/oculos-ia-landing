@@ -37,17 +37,17 @@ export default function Faq() {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section className="py-20 sm:py-28">
+    <section id="faq" className="py-24 sm:py-32">
       <div className="mx-auto max-w-3xl px-6">
-        <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
+        <h2 data-reveal className="text-3xl font-bold tracking-[-0.02em] sm:text-5xl">
           Perguntas frequentes.
         </h2>
 
-        <div className="glass mt-10 divide-y divide-white/10 px-6 sm:px-8">
+        <div data-reveal className="mt-10 border-t border-line-soft">
           {faqItems.map((item, index) => {
             const isOpen = openIndex === index;
             return (
-              <div key={item.question}>
+              <div key={item.question} className="border-b border-line-soft">
                 <h3>
                   <button
                     type="button"
@@ -55,7 +55,7 @@ export default function Faq() {
                     aria-expanded={isOpen}
                     aria-controls={`faq-panel-${index}`}
                     onClick={() => setOpenIndex(isOpen ? null : index)}
-                    className="flex w-full items-center justify-between gap-4 py-5 text-left font-display text-lg font-bold tracking-tight transition hover:text-cyan-300"
+                    className="flex w-full items-center justify-between gap-4 py-5 text-left text-lg font-semibold tracking-tight transition hover:opacity-70"
                   >
                     {item.question}
                     <svg
@@ -64,8 +64,8 @@ export default function Faq() {
                       stroke="currentColor"
                       strokeWidth={2}
                       strokeLinecap="round"
-                      className={`h-5 w-5 shrink-0 transition-transform duration-300 ${
-                        isOpen ? "rotate-45 text-cyan-300" : ""
+                      className={`h-5 w-5 shrink-0 text-ink-soft transition-transform duration-300 ${
+                        isOpen ? "rotate-45 text-accent" : ""
                       }`}
                       aria-hidden="true"
                     >
@@ -82,7 +82,7 @@ export default function Faq() {
                   }`}
                 >
                   <div className="overflow-hidden">
-                    <p className="pb-5 text-[15px] leading-relaxed text-white/60">
+                    <p className="pb-5 text-[15px] leading-relaxed text-ink-soft">
                       {item.answer}
                     </p>
                   </div>

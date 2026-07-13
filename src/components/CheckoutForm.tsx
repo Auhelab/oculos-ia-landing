@@ -59,10 +59,10 @@ const cepStatusMessages: Record<Exclude<CepStatus, "idle">, string> = {
 };
 
 const inputBase =
-  "w-full rounded-xl border bg-white/10 px-4 py-3 text-[15px] text-white placeholder:text-white/35 backdrop-blur-md transition read-only:bg-white/[0.04] read-only:text-white/50";
+  "w-full rounded-xl border bg-white px-4 py-3 text-[15px] text-ink outline-none transition placeholder:text-ink-soft/60 focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/25 focus-visible:ring-offset-0 read-only:bg-haze read-only:text-ink-soft";
 
 function inputClass(hasError: boolean): string {
-  return `${inputBase} ${hasError ? "border-rose-400/70" : "border-white/20"}`;
+  return `${inputBase} ${hasError ? "border-red-500" : "border-line"}`;
 }
 
 interface FieldProps {
@@ -77,16 +77,16 @@ interface FieldProps {
 function Field({ id, label, error, hint, className, children }: FieldProps) {
   return (
     <div className={className}>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-semibold text-white">
+      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-ink">
         {label}
       </label>
       {children}
       {error ? (
-        <p id={`${id}-error`} role="alert" className="mt-1.5 text-sm text-rose-300">
+        <p id={`${id}-error`} role="alert" className="mt-1.5 text-sm text-red-600">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${id}-hint`} className="mt-1.5 text-sm text-white/45">
+        <p id={`${id}-hint`} className="mt-1.5 text-sm text-ink-soft">
           {hint}
         </p>
       ) : null}
@@ -256,12 +256,12 @@ export default function CheckoutForm() {
   const heroImage = product.images[0];
 
   return (
-    <section id="checkout" className="py-20 sm:py-28">
+    <section id="checkout" className="bg-haze py-24 sm:py-32">
       <div className="mx-auto max-w-page px-6">
-        <h2 className="font-display text-3xl font-extrabold tracking-tight sm:text-5xl">
+        <h2 className="text-3xl font-bold tracking-[-0.02em] sm:text-5xl">
           Finalize seu pedido.
         </h2>
-        <p className="mt-3 max-w-2xl text-lg text-white/60">
+        <p className="mt-3 max-w-2xl text-lg text-ink-soft">
           {order
             ? "Escolha a forma de pagamento e finalize com segurança."
             : "Preencha seus dados de entrega e vá direto para o pagamento."}
@@ -269,44 +269,44 @@ export default function CheckoutForm() {
 
         <div className="mt-12 grid items-start gap-8 lg:grid-cols-[minmax(0,24rem)_minmax(0,1fr)]">
           {/* Resumo do pedido */}
-          <aside className="glass relative overflow-hidden p-8 lg:sticky lg:top-8">
-            <div
-              aria-hidden="true"
-              className="pointer-events-none absolute -left-20 -top-20 h-56 w-56 rounded-full bg-gradient-to-br from-violet-500/25 to-cyan-400/20 blur-3xl"
-            />
-            <img src={heroImage.src} alt={heroImage.alt} className="relative mx-auto w-64" />
-            <h3 className="relative mt-4 font-display text-2xl font-extrabold tracking-tight">
-              {product.name}
-            </h3>
-            <p className="relative mt-1 text-sm text-white/55">{product.tagline}</p>
+          <aside className="card-white p-8 lg:sticky lg:top-24">
+            <div className="overflow-hidden rounded-2xl bg-haze">
+              <img
+                src={heroImage.src}
+                alt={heroImage.alt}
+                className="aspect-[4/3] w-full object-cover"
+              />
+            </div>
+            <h3 className="mt-5 text-xl font-semibold tracking-tight">{product.name}</h3>
+            <p className="mt-1 text-sm text-ink-soft">{product.tagline}</p>
 
-            <dl className="relative mt-6 space-y-2 border-t border-white/10 pt-6 text-sm">
+            <dl className="mt-6 space-y-2 border-t border-line-soft pt-6 text-sm">
               <div className="flex justify-between">
-                <dt className="text-white/55">Subtotal</dt>
+                <dt className="text-ink-soft">Subtotal</dt>
                 <dd className="font-semibold">{formatBRL(product.priceCents)}</dd>
               </div>
               <div className="flex justify-between">
-                <dt className="text-white/55">Frete</dt>
-                <dd className="font-semibold text-emerald-400">Grátis</dd>
+                <dt className="text-ink-soft">Frete</dt>
+                <dd className="font-semibold text-green-600">Grátis</dd>
               </div>
-              <div className="flex justify-between border-t border-white/10 pt-3 text-base">
+              <div className="flex justify-between border-t border-line-soft pt-3 text-base">
                 <dt className="font-semibold">Total</dt>
-                <dd className="font-display text-xl font-extrabold">
+                <dd className="text-xl font-bold">
                   {formatBRL(product.priceCents)}
                 </dd>
               </div>
             </dl>
-            <p className="relative mt-2 text-xs text-white/45">
+            <p className="mt-2 text-xs text-ink-soft">
               ou {product.maxInstallments}x de {installment} sem juros
             </p>
-            <p className="relative mt-4 rounded-xl border border-white/10 bg-white/[0.05] p-3 text-xs leading-relaxed text-white/55 backdrop-blur-md">
+            <p className="mt-4 rounded-xl bg-haze p-3 text-xs leading-relaxed text-ink-soft">
               🔒 O valor final é confirmado e cobrado com segurança apenas na etapa de pagamento.
             </p>
           </aside>
 
           {/* Passo 2 — Pagamento (Payment Brick), no mesmo painel de vidro */}
           {order ? (
-            <div className="glass p-6 sm:p-10">
+            <div className="card-white p-6 sm:p-10">
               <PaymentStep
                 orderId={order.orderId}
                 amountCents={order.amountCents}
@@ -316,9 +316,9 @@ export default function CheckoutForm() {
             </div>
           ) : (
             /* Passo 1 — Formulário de dados */
-            <form onSubmit={onSubmit} noValidate className="glass p-6 sm:p-10">
+            <form onSubmit={onSubmit} noValidate className="card-white p-6 sm:p-10">
               <fieldset>
-              <legend className="font-display text-xl font-bold tracking-tight">
+              <legend className="text-xl font-semibold tracking-tight">
                 Seus dados
               </legend>
 
@@ -384,7 +384,7 @@ export default function CheckoutForm() {
             </fieldset>
 
             <fieldset className="mt-10">
-              <legend className="font-display text-xl font-bold tracking-tight">
+              <legend className="text-xl font-semibold tracking-tight">
                 Endereço de entrega
               </legend>
 
@@ -412,7 +412,7 @@ export default function CheckoutForm() {
                       {cepStatus === "loading" && (
                         <span
                           aria-hidden="true"
-                          className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin rounded-full border-2 border-white/25 border-t-cyan-300"
+                          className="absolute right-4 top-1/2 h-5 w-5 -translate-y-1/2 animate-spin rounded-full border-2 border-line border-t-accent"
                         />
                       )}
                     </div>
@@ -424,12 +424,12 @@ export default function CheckoutForm() {
                   aria-live="polite"
                   className={`text-sm font-medium ${
                     cepStatus === "success"
-                      ? "text-emerald-400"
+                      ? "text-green-600"
                       : cepStatus === "loading"
-                        ? "text-white/55"
+                        ? "text-ink-soft"
                         : cepStatus === "idle"
                           ? "hidden"
-                          : "text-amber-300"
+                          : "text-amber-600"
                   }`}
                 >
                   {cepStatus !== "idle" ? cepStatusMessages[cepStatus] : ""}
@@ -534,7 +534,7 @@ export default function CheckoutForm() {
             <button
                 type="submit"
                 disabled={creating}
-                className="btn-gradient mt-10 flex w-full items-center justify-center gap-2 px-8 py-4 text-base disabled:cursor-not-allowed disabled:opacity-60"
+                className="btn-primary mt-10 w-full px-8 py-4 text-base"
               >
                 {creating && (
                   <span
@@ -545,14 +545,14 @@ export default function CheckoutForm() {
                 {creating ? "Criando pedido…" : "Ir para o pagamento"}
               </button>
 
-              <p className="mt-3 text-center text-xs text-white/45">
+              <p className="mt-3 text-center text-xs text-ink-soft">
                 🔒 Seus dados são usados apenas para entrega e emissão da nota fiscal (LGPD).
               </p>
 
               {submitError && (
                 <p
                   role="alert"
-                  className="mt-6 rounded-xl border border-rose-400/30 bg-rose-400/10 p-4 text-sm font-medium text-rose-200 backdrop-blur-md"
+                  className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
                 >
                   {submitError}
                 </p>
