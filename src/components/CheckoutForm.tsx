@@ -23,12 +23,12 @@ const checkoutSchema = z.object({
   cpf: z
     .string()
     .min(1, "Informe seu CPF")
-    .refine(isValidCpf, "CPF inválido — confira os números digitados"),
+    .refine(isValidCpf, "CPF inválido · confira os números digitados"),
   email: z.string().trim().min(1, "Informe seu e-mail").email("E-mail inválido"),
   whatsapp: z
     .string()
     .min(1, "Informe seu WhatsApp")
-    .refine(isValidPhone, "Número inválido — use o formato (11) 98765-4321"),
+    .refine(isValidPhone, "Número inválido · use o formato (11) 98765-4321"),
   cep: z.string().min(1, "Informe seu CEP").refine(isValidCep, "CEP incompleto"),
   street: z.string().trim().min(1, "Informe a rua"),
   number: z.string().trim().min(1, "Informe o número"),

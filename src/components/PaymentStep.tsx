@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { initMercadoPago, Payment } from "@mercadopago/sdk-react";
 import { env } from "../config/env";
+import { product } from "../config/product";
 import { ApiError, processPayment, type PixData } from "../lib/api";
 import { formatBRL } from "../lib/money";
 
@@ -175,6 +176,7 @@ export default function PaymentStep({
               creditCard: "all",
               debitCard: "all",
               bankTransfer: "all",
+              maxInstallments: product.maxInstallments,
             },
             visual: { style: { theme: "default" } },
           }}

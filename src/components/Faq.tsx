@@ -19,7 +19,7 @@ const faqItems: FaqItem[] = [
   {
     question: "Quais são as formas de pagamento?",
     answer:
-      "Aceitamos cartão de crédito em até 12x e Pix (com confirmação imediata). O pagamento é processado em ambiente seguro e criptografado — nenhum dado do seu cartão fica salvo em nosso site.",
+      "Aceitamos cartão de crédito em até 6x e Pix (com confirmação imediata). O pagamento é processado em ambiente seguro e criptografado · nenhum dado do seu cartão fica salvo em nosso site.",
   },
   {
     question: "Preciso de aplicativo para usar?",

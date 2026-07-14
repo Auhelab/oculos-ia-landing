@@ -32,7 +32,7 @@ const benefits: Benefit[] = [
   {
     title: "Câmera HD 8MP",
     description:
-      "Fotos nítidas e vídeos em alta definição com um toque na haste — registre tudo em primeira pessoa, sem tirar o celular do bolso.",
+      "Fotos nítidas e vídeos em alta definição com um toque na haste · registre tudo em primeira pessoa, sem tirar o celular do bolso.",
     icon: (
       <svg {...iconProps}>
         <rect x="3" y="7" width="18" height="13" rx="3" />

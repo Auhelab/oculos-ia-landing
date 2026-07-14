@@ -3,7 +3,7 @@ const stats = [
   { value: "8 MP", label: "câmera HD integrada" },
   { value: "100+", label: "idiomas por IA" },
   { value: "3", label: "lentes inclusas" },
-  { value: "12x", label: "sem juros no cartão" },
+  { value: "6x", label: "sem juros no cartão" },
 ];
 
 export default function Stats() {

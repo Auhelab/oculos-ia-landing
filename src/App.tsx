@@ -34,7 +34,7 @@ function useHashRoute(): string {
 }
 
 const LEGAL_ROUTES = ["#/termos", "#/privacidade", "#/obrigado"];
-const DEFAULT_TITLE = "Óculos Inteligentes IA | Câmera, tradução e música";
+const DEFAULT_TITLE = "Smart Glasses | Câmera, tradução e música";
 
 export default function App() {
   const route = useHashRoute();

@@ -51,7 +51,7 @@ const beats: Beat[] = [
     word: "CÂMERA",
     eyebrow: "Câmera HD 8MP",
     title: "Registre em primeira pessoa.",
-    text: "Fotos nítidas e vídeos em alta definição com um toque na haste — sem tirar o celular do bolso.",
+    text: "Fotos nítidas e vídeos em alta definição com um toque na haste · sem tirar o celular do bolso.",
     side: "right",
     at: 0.5,
   },

@@ -14,7 +14,7 @@ export default function PrivacyPolicy() {
         <h2 className="text-lg font-semibold text-ink">2. Finalidade e base legal (LGPD)</h2>
         <p className="mt-2">
           O tratamento dos dados tem como base legal a execução de contrato (art. 7º, V, da Lei
-          nº 13.709/2018 — LGPD): emissão de nota fiscal, envio do produto e comunicação sobre o
+          nº 13.709/2018 · LGPD): emissão de nota fiscal, envio do produto e comunicação sobre o
           status do pedido. Não vendemos nem compartilhamos seus dados para fins de marketing de
           terceiros.
         </p>

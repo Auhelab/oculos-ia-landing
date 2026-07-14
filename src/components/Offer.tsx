@@ -81,7 +81,7 @@ export default function Offer() {
           </a>
 
           <p className="mt-4 text-center text-xs text-ink-soft">
-            Você não será cobrado agora — o pagamento é confirmado na próxima etapa.
+            Você não será cobrado agora · o pagamento é confirmado na próxima etapa.
           </p>
         </div>
       </div>

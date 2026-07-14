@@ -1,5 +1,8 @@
 import { product } from "../config/product";
 import { formatBRL, installmentCents } from "../lib/money";
+import Dot from "./Dot";
+
+const [taglineLead, taglineTail] = product.tagline.split(" · ");
 
 export default function Hero() {
   const installment = formatBRL(installmentCents(product.priceCents, product.maxInstallments));
@@ -8,11 +11,11 @@ export default function Hero() {
     <section className="overflow-hidden">
       <div className="mx-auto flex min-h-[calc(100vh-3.5rem)] max-w-page flex-col items-center justify-center px-6 py-16 text-center">
         <p className="eyebrow animate-fade-up" style={{ animationDelay: "0ms" }}>
-          Novo · Lançamento 2026
+          Novo <Dot /> Lançamento 2026
         </p>
 
         <h1
-          className="animate-fade-up mt-4 max-w-3xl text-[2.75rem] font-bold leading-[1.05] tracking-[-0.03em] sm:text-6xl lg:text-7xl"
+          className="animate-fade-up mt-4 max-w-3xl text-[2.75rem] font-bold leading-[1.05] tracking-[0.01em] sm:text-6xl lg:text-7xl"
           style={{ animationDelay: "100ms" }}
         >
           {product.name}
@@ -22,7 +25,13 @@ export default function Hero() {
           className="animate-fade-up mt-5 max-w-2xl text-lg text-ink-soft sm:text-2xl"
           style={{ animationDelay: "200ms" }}
         >
-          {product.tagline}
+          {taglineLead}
+          {taglineTail && (
+            <>
+              <Dot />
+              {taglineTail}
+            </>
+          )}
         </p>
 
         <div
@@ -54,7 +63,7 @@ export default function Hero() {
           style={{ animationDelay: "360ms" }}
         >
           {formatBRL(product.priceCents)} ou {product.maxInstallments}x de {installment} sem
-          juros · Frete grátis
+          juros <Dot /> Frete grátis
         </p>
 
         {/* Sem imagem estática aqui: o produto aparece uma única vez, girando,

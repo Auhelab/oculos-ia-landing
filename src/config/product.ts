@@ -21,11 +21,11 @@ export interface ProductConfig {
 
 export const product: ProductConfig = {
   id: "oculos-inteligentes-ia-2026",
-  name: "Óculos Inteligentes IA",
-  tagline: "Câmera, tradução por IA e música — direto nos seus óculos.",
-  priceCents: 39990,
+  name: "Smart Glasses",
+  tagline: "Câmera, tradução por IA e música · direto nos seus óculos.",
+  priceCents: 39700,
   compareAtPriceCents: 59990,
-  maxInstallments: 12,
+  maxInstallments: 6,
   stockLeft: 23,
   images: [
     {

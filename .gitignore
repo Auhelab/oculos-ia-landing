@@ -8,3 +8,10 @@ dist
 
 # Supabase CLI local state (nao versionar)
 supabase/.temp
+
+# Cópia duplicada stale do projeto (nao versionar)
+oculos-ia-landing/
+
+# Backups locais de frames do giro 360 (nao versionar)
+public/images/spin_old_4arc/
+public/images/spin_old_kling/
