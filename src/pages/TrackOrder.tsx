@@ -93,9 +93,20 @@ export default function TrackOrder() {
         if (paid.number && paid.email) void runTrack(paid.number, paid.email);
       }
     } else {
-      // Acesso manual: link do e-mail traz só o número; pela landing, nada.
+      // Acesso manual: link do e-mail traz o número em ?pedido=. Sem isso
+      // (ex.: botão "Rastrear sua compra" da nav), pré-preenche com o último
+      // pedido guardado na sessão — sem consultar sozinho, o cliente confere
+      // e clica em Rastrear. O ?pedido= da URL tem prioridade sobre o storage.
       const prefill = params.get("pedido") ?? "";
-      if (prefill) setOrderId(prefill);
+      if (prefill) {
+        setOrderId(prefill);
+      } else {
+        const paid = readPaidOrder();
+        if (paid) {
+          setOrderId(paid.number);
+          setEmail(paid.email);
+        }
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
