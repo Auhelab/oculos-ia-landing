@@ -13,6 +13,13 @@ pessoa trabalha no **seu próprio branch**; o `main` é o ponto de integração.
 - **`scripts/git-publish.ps1`** — você roda quando quiser **compartilhar** seu
   trabalho: mescla seu branch no `main` e envia. O auto-sync da outra pessoa
   puxa o `main` na próxima rodada.
+- **`scripts/git-autopublish.ps1`** — roda a cada **40 min** pelo Agendador de
+  Tarefas (tarefa `oculos-ia-git-autopublish`). Automatiza o publish: commita
+  seu trabalho → integra o `main` do parceiro → mescla seu branch no `main` e
+  envia → volta pro seu branch. Em conflito, **para e avisa** (`.autopublish.log`)
+  sem deixar o repo preso no `main`. ⚠️ Publica trabalho em andamento (WIP) no
+  `main` — se preferir só compartilhar em pontos deliberados, desative essa
+  tarefa e use o `git-publish.ps1` manual.
 
 ## Regras de convívio
 
