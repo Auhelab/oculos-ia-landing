@@ -14,6 +14,25 @@ import { isPaymentConfigured } from "../config/env";
 import PaymentStep from "./PaymentStep";
 import { rememberPaidOrder } from "../pages/ThankYou";
 
+/** Cadeado outline que herda a cor do texto (substitui o emoji 🔒). */
+function LockIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+      className={className}
+    >
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+    </svg>
+  );
+}
+
 const checkoutSchema = z.object({
   fullName: z
     .string()
@@ -309,8 +328,11 @@ export default function CheckoutForm() {
             <p className="mt-2 text-xs text-ink-soft">
               ou {product.maxInstallments}x de {installment} sem juros
             </p>
-            <p className="mt-4 rounded-xl bg-haze p-3 text-xs leading-relaxed text-ink-soft">
-              🔒 O valor final é confirmado e cobrado com segurança apenas na etapa de pagamento.
+            <p className="mt-4 flex items-start gap-2 rounded-xl bg-haze p-3 text-xs leading-relaxed text-ink-soft">
+              <LockIcon className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+              <span>
+                O valor final é confirmado e cobrado com segurança apenas na etapa de pagamento.
+              </span>
             </p>
           </aside>
 
@@ -320,6 +342,7 @@ export default function CheckoutForm() {
               <PaymentStep
                 orderId={order.orderId}
                 amountCents={order.amountCents}
+                customerEmail={paidEmailRef.current}
                 onApproved={handleApproved}
                 onBack={() => setOrder(null)}
               />
@@ -555,8 +578,11 @@ export default function CheckoutForm() {
                 {creating ? "Criando pedido…" : "Ir para o pagamento"}
               </button>
 
-              <p className="mt-3 text-center text-xs text-ink-soft">
-                🔒 Seus dados são usados apenas para entrega e emissão da nota fiscal (LGPD).
+              <p className="mt-3 flex items-center justify-center gap-1.5 text-center text-xs text-ink-soft">
+                <LockIcon className="h-3.5 w-3.5 shrink-0" />
+                <span>
+                  Seus dados são usados apenas para entrega e emissão da nota fiscal (LGPD).
+                </span>
               </p>
 
               {submitError && (

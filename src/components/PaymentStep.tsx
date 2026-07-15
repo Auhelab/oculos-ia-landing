@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { initMercadoPago, Payment } from "@mercadopago/sdk-react";
 import { env } from "../config/env";
 import { product } from "../config/product";
-import { ApiError, processPayment, type PixData } from "../lib/api";
+import { ApiError, processPayment, trackOrder, type PixData } from "../lib/api";
 import { formatBRL } from "../lib/money";
 
 // Inicializa o SDK uma única vez com a public key (segura para o frontend).
@@ -17,6 +17,7 @@ function ensureMpInitialized(): void {
 interface PaymentStepProps {
   orderId: string;
   amountCents: number;
+  customerEmail: string;
   onApproved: (orderId: string) => void;
   onBack: () => void;
 }
@@ -44,6 +45,7 @@ function rejectionMessage(detail: string): string {
 export default function PaymentStep({
   orderId,
   amountCents,
+  customerEmail,
   onApproved,
   onBack,
 }: PaymentStepProps) {
@@ -58,6 +60,44 @@ export default function PaymentStep({
   useEffect(() => {
     ensureMpInitialized();
   }, []);
+
+  // Pix é assíncrono: a confirmação chega via webhook do MP no backend, que
+  // marca o pedido como pago. Aqui consultamos o status a cada 5s até "paid"
+  // e então avançamos — mesmo destino do cartão. Erros de rede são transientes:
+  // a rodada seguinte tenta de novo. setTimeout encadeado evita requests sobrepostos.
+  useEffect(() => {
+    if (result.kind !== "pix") return;
+    let cancelled = false;
+    let timer: number | undefined;
+
+    async function check(): Promise<void> {
+      try {
+        const res = await trackOrder(orderId, customerEmail);
+        if (cancelled) return;
+        if (res.status === "paid") {
+          onApproved(orderId);
+          return;
+        }
+        if (res.status === "rejected" || res.status === "refunded") {
+          setBrickReady(false);
+          setResult({
+            kind: "rejected",
+            detail: "O Pix foi cancelado ou expirou. Gere um novo para concluir.",
+          });
+          return;
+        }
+      } catch {
+        // Falha transiente na consulta — mantém o polling.
+      }
+      if (!cancelled) timer = window.setTimeout(() => void check(), 5000);
+    }
+
+    void check();
+    return () => {
+      cancelled = true;
+      if (timer !== undefined) window.clearTimeout(timer);
+    };
+  }, [result.kind, orderId, customerEmail, onApproved]);
 
   // Se o Brick demorar (a API payment_methods do MP às vezes trava ~15s),
   // trocamos a mensagem para tranquilizar o cliente de que não está travado.
@@ -140,8 +180,18 @@ export default function PaymentStep({
             </button>
           </div>
         </div>
-        <p className="mt-6 rounded-xl bg-haze p-3 text-xs text-ink-soft">
-          Assim que o pagamento for confirmado, você receberá a atualização do pedido por e-mail.
+        <p
+          role="status"
+          className="mt-6 flex items-center justify-center gap-2 text-sm font-medium text-ink"
+        >
+          <span
+            aria-hidden="true"
+            className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-ink"
+          />
+          Aguardando o pagamento — esta tela avança sozinha.
+        </p>
+        <p className="mt-3 rounded-xl bg-haze p-3 text-xs text-ink-soft">
+          Se preferir fechar a página, tudo bem: você também receberá a confirmação do pedido por e-mail.
         </p>
       </div>
     );
