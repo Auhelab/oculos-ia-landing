@@ -19,7 +19,7 @@ import { sendShippedEmailOnce } from "../_shared/order-mailer.ts";
 const ADMIN_API_KEY = Deno.env.get("ADMIN_API_KEY");
 
 const LIST_COLUMNS =
-  "id, status, mp_status_detail, payment_method, amount_cents, created_at, updated_at," +
+  "id, order_number, status, mp_status_detail, payment_method, amount_cents, created_at, updated_at," +
   " customer_name, customer_email, customer_whatsapp, customer_cpf," +
   " address_street, address_number, address_complement, address_neighborhood," +
   " address_city, address_state, address_cep, tracking_code, tracking_url, shipped_at";

@@ -92,10 +92,15 @@ export function parseCheckoutPayload(input: unknown): ParseResult {
   const email = asString(customerRaw.email);
   const whatsapp = onlyDigits(asString(customerRaw.whatsapp));
 
-  if (fullName.split(/\s+/).filter(Boolean).length < 2) {
-    return { ok: false, error: "Nome completo inválido." };
+  // Exige nome + sobrenome: pelo menos 2 partes, cada uma com >= 2 letras
+  // (rejeita "Henrique", "H B", "Henrique 1"). Espelha a regra do frontend.
+  const namedParts = fullName
+    .split(/\s+/)
+    .filter((part) => (part.match(/\p{L}/gu) ?? []).length >= 2);
+  if (namedParts.length < 2) {
+    return { ok: false, error: "Informe nome e sobrenome." };
   }
-  if (!isValidCpf(cpf)) return { ok: false, error: "CPF inválido." };
+  if (cpf && !isValidCpf(cpf)) return { ok: false, error: "CPF inválido." };
   if (!isValidEmail(email)) return { ok: false, error: "E-mail inválido." };
   if (!isValidPhone(whatsapp)) return { ok: false, error: "WhatsApp inválido." };
 

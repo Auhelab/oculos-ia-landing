@@ -33,15 +33,22 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Informe o número do pedido e o e-mail." }, 400);
   }
 
+  // Aceita o número legível (#318798 / 318798) ou o UUID legado. Só-dígitos após
+  // remover "#" e espaços → busca por order_number; senão → busca pelo id (UUID).
+  const cleaned = orderId.replace(/[#\s]/g, "");
+  const byNumber = /^\d+$/.test(cleaned);
+
   try {
     const supabase = createAdminClient();
-    const { data, error } = await supabase
+    const baseQuery = supabase
       .from("orders")
       .select(
-        "id, status, amount_cents, created_at, shipped_at, tracking_code, tracking_url, customer_email",
-      )
-      .eq("id", orderId)
-      .maybeSingle();
+        "id, order_number, status, amount_cents, created_at, shipped_at, tracking_code, tracking_url, customer_email",
+      );
+    const { data, error } = await (byNumber
+      ? baseQuery.eq("order_number", Number(cleaned))
+      : baseQuery.eq("id", orderId)
+    ).maybeSingle();
 
     if (error) throw error;
 
@@ -56,6 +63,7 @@ Deno.serve(async (req) => {
 
     return jsonResponse({
       orderId: data.id,
+      orderNumber: data.order_number,
       status: data.status,
       amountCents: data.amount_cents,
       createdAt: data.created_at,

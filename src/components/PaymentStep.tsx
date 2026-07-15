@@ -49,10 +49,23 @@ export default function PaymentStep({
 }: PaymentStepProps) {
   const [result, setResult] = useState<PaymentResult>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
+  // Enquanto o Brick do Mercado Pago não termina de carregar, mostramos um
+  // overlay de "carregando". Sem esse sinal, a área fica em branco e o cliente
+  // acha que travou — e abandona a compra.
+  const [brickReady, setBrickReady] = useState(false);
+  const [brickSlow, setBrickSlow] = useState(false);
 
   useEffect(() => {
     ensureMpInitialized();
   }, []);
+
+  // Se o Brick demorar (a API payment_methods do MP às vezes trava ~15s),
+  // trocamos a mensagem para tranquilizar o cliente de que não está travado.
+  useEffect(() => {
+    if (brickReady) return;
+    const timer = window.setTimeout(() => setBrickSlow(true), 6000);
+    return () => window.clearTimeout(timer);
+  }, [brickReady]);
 
   async function handleSubmit({ formData }: { formData: unknown }): Promise<void> {
     try {
@@ -168,20 +181,59 @@ export default function PaymentStep({
         </p>
       )}
 
-      <div className="mt-5">
-        <Payment
-          initialization={{ amount: amountCents / 100 }}
-          customization={{
-            paymentMethods: {
-              creditCard: "all",
-              debitCard: "all",
-              bankTransfer: "all",
-              maxInstallments: product.maxInstallments,
-            },
-            visual: { style: { theme: "default" } },
-          }}
-          onSubmit={handleSubmit}
-        />
+      <div className={`relative mt-5 ${brickReady ? "" : "min-h-[380px]"}`}>
+        <div
+          className={brickReady ? "" : "pointer-events-none opacity-0"}
+          aria-hidden={!brickReady}
+        >
+          <Payment
+            initialization={{ amount: amountCents / 100 }}
+            customization={{
+              paymentMethods: {
+                creditCard: "all",
+                // Débito removido a pedido — só cartão de crédito e Pix.
+                bankTransfer: "all",
+                maxInstallments: product.maxInstallments,
+              },
+              visual: { style: { theme: "default" } },
+            }}
+            onSubmit={handleSubmit}
+            onReady={() => setBrickReady(true)}
+            // Se o Brick falhar em carregar, revelamos o container para ele
+            // exibir o próprio erro em vez de deixar o cliente num spinner eterno.
+            onError={() => setBrickReady(true)}
+          />
+        </div>
+        {!brickReady && <BrickLoading slow={brickSlow} />}
+      </div>
+    </div>
+  );
+}
+
+/** Overlay de carregamento exibido sobre a área do Brick enquanto ele monta. */
+function BrickLoading({ slow }: { slow: boolean }) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="absolute inset-0 flex flex-col items-center justify-center gap-5 rounded-2xl bg-white"
+    >
+      <span
+        aria-hidden="true"
+        className="h-8 w-8 animate-spin rounded-full border-2 border-line border-t-ink"
+      />
+      <div className="px-6 text-center">
+        <p className="text-sm font-medium text-ink">Carregando formas de pagamento…</p>
+        <p className="mt-1.5 text-xs text-ink-soft">
+          {slow
+            ? "A conexão com o Mercado Pago está um pouco lenta. Já está quase lá — não feche a página."
+            : "Cartão, Pix e mais aparecem em instantes."}
+        </p>
+      </div>
+      <div className="mt-1 w-full max-w-xs space-y-2.5 px-2">
+        <div className="h-11 animate-pulse rounded-xl bg-haze" />
+        <div className="h-11 animate-pulse rounded-xl bg-haze" />
+        <div className="h-11 w-2/3 animate-pulse rounded-xl bg-haze" />
       </div>
     </div>
   );

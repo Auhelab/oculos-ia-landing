@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
         address_city: address.city,
         address_state: address.state,
       })
-      .select("id, amount_cents")
+      .select("id, amount_cents, order_number")
       .single();
 
     if (insertError) throw insertError;
@@ -72,6 +72,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       orderId: orderRow.id,
       amountCents: orderRow.amount_cents,
+      orderNumber: orderRow.order_number,
     });
   } catch (error) {
     console.error("create-order falhou:", error);

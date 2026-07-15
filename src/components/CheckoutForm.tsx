@@ -19,11 +19,17 @@ const checkoutSchema = z.object({
     .string()
     .trim()
     .min(1, "Informe seu nome completo")
-    .refine((value) => value.split(/\s+/).length >= 2, "Informe nome e sobrenome"),
+    .refine(
+      // Nome + sobrenome: 2+ partes, cada uma com >= 2 letras (rejeita "H B", "Ana 1").
+      (value) =>
+        value.split(/\s+/).filter((part) => (part.match(/\p{L}/gu) ?? []).length >= 2)
+          .length >= 2,
+      "Informe nome e sobrenome",
+    ),
   cpf: z
     .string()
-    .min(1, "Informe seu CPF")
-    .refine(isValidCpf, "CPF inválido · confira os números digitados"),
+    .trim()
+    .refine((value) => value === "" || isValidCpf(value), "CPF inválido · confira os números digitados"),
   email: z.string().trim().min(1, "Informe seu e-mail").email("E-mail inválido"),
   whatsapp: z
     .string()
@@ -126,6 +132,8 @@ export default function CheckoutForm() {
     },
   });
 
+  // Guarda o e-mail da compra p/ pré-preencher o rastreio depois da aprovação.
+  const paidEmailRef = useRef("");
   const [cepStatus, setCepStatus] = useState<CepStatus>("idle");
   const [locked, setLocked] = useState<Record<AddressField, boolean>>(noneLocked);
   const [order, setOrder] = useState<CreateOrderResult | null>(null);
@@ -233,6 +241,7 @@ export default function CheckoutForm() {
 
     setSubmitError(null);
     setCreating(true);
+    paidEmailRef.current = data.email;
     try {
       const created = await createOrder(payload);
       setOrder(created);
@@ -247,8 +256,9 @@ export default function CheckoutForm() {
     }
   });
 
-  function handleApproved(orderId: string) {
-    rememberPaidOrder(orderId);
+  function handleApproved() {
+    // Guarda número + e-mail p/ a tela de obrigado e o pré-preenchimento do rastreio.
+    if (order) rememberPaidOrder(String(order.orderNumber), paidEmailRef.current);
     window.location.hash = "#/obrigado";
   }
 
@@ -350,7 +360,7 @@ export default function CheckoutForm() {
                 </Field>
 
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field id="cpf" label="CPF" error={errors.cpf?.message}>
+                  <Field id="cpf" label="CPF (opcional)" error={errors.cpf?.message}>
                     <input
                       id="cpf"
                       type="text"

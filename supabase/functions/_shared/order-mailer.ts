@@ -16,11 +16,12 @@ import {
 
 /** Colunas do pedido usadas na montagem dos e-mails. */
 const ORDER_COLUMNS =
-  "id, customer_name, customer_email, amount_cents, status, tracking_code, tracking_url," +
+  "id, order_number, customer_name, customer_email, amount_cents, status, tracking_code, tracking_url," +
   " address_street, address_number, address_neighborhood, address_city, address_state, address_cep";
 
 interface OrderRow {
   id: string;
+  order_number: number | null;
   customer_name: string;
   customer_email: string;
   amount_cents: number;
@@ -38,9 +39,19 @@ interface OrderRow {
 const STORE_NAME = "Óculos Inteligentes IA";
 
 /** Link para a página de rastreio, já com o pedido pré-preenchido. */
-function trackUrl(orderId: string): string {
+function trackUrl(orderRef: string): string {
   if (!STORE_URL) return "";
-  return `${STORE_URL}/#/rastreio?pedido=${encodeURIComponent(orderId)}`;
+  return `${STORE_URL}/#/rastreio?pedido=${encodeURIComponent(orderRef)}`;
+}
+
+/** Número legível do pedido (#318798) com fallback pro id curto legado. */
+function orderLabel(o: OrderRow): string {
+  return o.order_number != null ? `#${o.order_number}` : shortId(o.id);
+}
+
+/** Referência usada no rastreio: número quando existir, senão o UUID. */
+function orderRef(o: OrderRow): string {
+  return o.order_number != null ? String(o.order_number) : o.id;
 }
 
 /** Primeiro nome do cliente, para uma saudação mais pessoal. */
@@ -74,7 +85,7 @@ export async function sendPaidEmailOnce(
   const order = data as OrderRow;
   const ok = await sendEmail({
     to: order.customer_email,
-    subject: `Pagamento aprovado — pedido ${shortId(order.id)}`,
+    subject: `Pagamento aprovado — pedido ${orderLabel(order)}`,
     html: paidEmailHtml(order),
   });
 
@@ -112,7 +123,7 @@ export async function sendShippedEmailOnce(
   const order = data as OrderRow;
   const ok = await sendEmail({
     to: order.customer_email,
-    subject: `Seu pedido ${shortId(order.id)} foi enviado 📦`,
+    subject: `Seu pedido ${orderLabel(order)} foi enviado 📦`,
     html: shippedEmailHtml(order),
   });
 
@@ -145,7 +156,7 @@ function paidEmailHtml(o: OrderRow): string {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;border:1px solid #22305c;border-radius:12px;">
       <tr><td style="padding:16px 18px;font-size:14px;line-height:1.7;color:#c9d3ea;">
         <div style="color:#7f8db3;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Pedido</div>
-        <div style="font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff;">${escapeHtml(o.id)}</div>
+        <div style="font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff;">${escapeHtml(orderLabel(o))}</div>
         <div style="margin-top:10px;color:#7f8db3;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Valor pago</div>
         <div style="color:#fff;font-weight:700;font-size:16px;">${formatBRL(o.amount_cents)}</div>
         <div style="margin-top:10px;color:#7f8db3;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Entrega</div>
@@ -155,7 +166,7 @@ function paidEmailHtml(o: OrderRow): string {
     <p style="margin:0;font-size:14px;line-height:1.6;color:#c9d3ea;">
       Assim que o produto for despachado, enviaremos o código de rastreio por aqui.
     </p>
-    ${ctaButton("Acompanhar meu pedido", trackUrl(o.id))}
+    ${ctaButton("Acompanhar meu pedido", trackUrl(orderRef(o)))}
   `;
   return emailLayout({ title: "Pagamento aprovado! 🎉", body });
 }
@@ -174,7 +185,7 @@ function shippedEmailHtml(o: OrderRow): string {
       <strong style="color:#fff;">${STORE_NAME}</strong> saiu para entrega.
     </p>
     ${codeBlock}
-    ${ctaButton("Rastrear entrega", o.tracking_url ?? trackUrl(o.id))}
+    ${ctaButton("Rastrear entrega", o.tracking_url ?? trackUrl(orderRef(o)))}
     <p style="margin:16px 0 0;font-size:13px;line-height:1.6;color:#7f8db3;">
       O código pode levar algumas horas para aparecer no site do transportador.
     </p>

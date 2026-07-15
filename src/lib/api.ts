@@ -26,6 +26,7 @@ export interface CheckoutPayload {
 export interface CreateOrderResult {
   orderId: string;
   amountCents: number;
+  orderNumber: number;
 }
 
 export interface PixData {
@@ -101,6 +102,7 @@ export function processPayment(
 
 export interface TrackResult {
   orderId: string;
+  orderNumber: number | null;
   status: string;
   amountCents: number;
   createdAt: string;
@@ -119,6 +121,7 @@ export function trackOrder(orderId: string, email: string): Promise<TrackResult>
 
 export interface AdminOrder {
   id: string;
+  order_number: number | null;
   status: string;
   mp_status_detail: string | null;
   payment_method: string | null;

@@ -8,18 +8,18 @@ export interface StatusMeta {
 }
 
 const META: Record<string, StatusMeta> = {
-  pending: { label: "Aguardando pagamento", chip: "border-white/15 bg-white/5 text-white/70" },
-  processing: { label: "Processando", chip: "border-amber-300/30 bg-amber-300/10 text-amber-200" },
-  paid: { label: "Pagamento aprovado", chip: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200" },
-  shipped: { label: "Enviado", chip: "border-cyan-400/30 bg-cyan-400/10 text-cyan-200" },
-  delivered: { label: "Entregue", chip: "border-emerald-400/30 bg-emerald-400/10 text-emerald-200" },
-  rejected: { label: "Não aprovado", chip: "border-rose-400/30 bg-rose-400/10 text-rose-200" },
-  cancelled: { label: "Cancelado", chip: "border-rose-400/30 bg-rose-400/10 text-rose-200" },
-  refunded: { label: "Reembolsado", chip: "border-white/15 bg-white/5 text-white/70" },
+  pending: { label: "Aguardando pagamento", chip: "border-line bg-haze text-ink-soft" },
+  processing: { label: "Processando", chip: "border-amber-200 bg-amber-50 text-amber-700" },
+  paid: { label: "Pagamento aprovado", chip: "border-green-200 bg-green-50 text-green-700" },
+  shipped: { label: "Enviado", chip: "border-blue-200 bg-blue-50 text-blue-700" },
+  delivered: { label: "Entregue", chip: "border-green-200 bg-green-50 text-green-700" },
+  rejected: { label: "Não aprovado", chip: "border-red-200 bg-red-50 text-red-700" },
+  cancelled: { label: "Cancelado", chip: "border-red-200 bg-red-50 text-red-700" },
+  refunded: { label: "Reembolsado", chip: "border-line bg-haze text-ink-soft" },
 };
 
 export function statusMeta(status: string): StatusMeta {
-  return META[status] ?? { label: status, chip: "border-white/15 bg-white/5 text-white/70" };
+  return META[status] ?? { label: status, chip: "border-line bg-haze text-ink-soft" };
 }
 
 /** Etapas visíveis da jornada de entrega, na ordem. */

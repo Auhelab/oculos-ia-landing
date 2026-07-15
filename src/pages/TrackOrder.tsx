@@ -3,14 +3,13 @@ import { ApiError, trackOrder, type TrackResult } from "../lib/api";
 import { formatBRL } from "../lib/money";
 import { JOURNEY, journeyIndex, statusMeta } from "../lib/orderStatus";
 import { product } from "../config/product";
+import { readPaidOrder } from "./ThankYou";
 
-/** Lê o parâmetro `pedido` da query do hash (#/rastreio?pedido=...). */
-function readOrderIdFromHash(): string {
+/** Lê os parâmetros da query do hash (#/rastreio?pedido=...&auto=1). */
+function readHashParams(): URLSearchParams {
   const hash = window.location.hash;
   const qIndex = hash.indexOf("?");
-  if (qIndex === -1) return "";
-  const params = new URLSearchParams(hash.slice(qIndex + 1));
-  return params.get("pedido") ?? "";
+  return new URLSearchParams(qIndex === -1 ? "" : hash.slice(qIndex + 1));
 }
 
 function formatDate(iso: string | null): string {
@@ -35,15 +34,15 @@ function Timeline({ status }: { status: string }) {
             <span
               className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full border text-sm font-bold ${
                 done
-                  ? "border-emerald-400/40 bg-emerald-400/15 text-emerald-200"
-                  : "border-white/15 bg-white/[0.04] text-white/40"
+                  ? "border-green-500/30 bg-green-50 text-green-600"
+                  : "border-line bg-haze text-ink-soft/50"
               }`}
             >
               {done ? "✓" : i + 1}
             </span>
             <span
               className={`text-sm font-medium ${
-                isCurrent ? "text-white" : done ? "text-white/75" : "text-white/45"
+                isCurrent ? "text-ink" : done ? "text-ink" : "text-ink-soft/60"
               }`}
             >
               {step.label}
@@ -62,20 +61,12 @@ export default function TrackOrder() {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<TrackResult | null>(null);
 
-  useEffect(() => {
-    document.title = `Rastrear pedido | ${product.name}`;
-    window.scrollTo(0, 0);
-    const prefill = readOrderIdFromHash();
-    if (prefill) setOrderId(prefill);
-  }, []);
-
-  async function handleSubmit(e: React.FormEvent): Promise<void> {
-    e.preventDefault();
+  async function runTrack(oid: string, mail: string): Promise<void> {
     setError(null);
     setResult(null);
     setLoading(true);
     try {
-      const res = await trackOrder(orderId.trim(), email.trim());
+      const res = await trackOrder(oid.trim(), mail.trim());
       setResult(res);
     } catch (err) {
       setError(
@@ -88,35 +79,61 @@ export default function TrackOrder() {
     }
   }
 
+  useEffect(() => {
+    document.title = `Rastrear pedido | ${product.name}`;
+    window.scrollTo(0, 0);
+    const params = readHashParams();
+    if (params.get("auto") === "1") {
+      // Fluxo pós-compra ("Rastrear meu pedido"): pré-preenche número + e-mail
+      // e já consulta automaticamente.
+      const paid = readPaidOrder();
+      if (paid) {
+        setOrderId(paid.number);
+        setEmail(paid.email);
+        if (paid.number && paid.email) void runTrack(paid.number, paid.email);
+      }
+    } else {
+      // Acesso manual: link do e-mail traz só o número; pela landing, nada.
+      const prefill = params.get("pedido") ?? "";
+      if (prefill) setOrderId(prefill);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent): Promise<void> {
+    e.preventDefault();
+    await runTrack(orderId, email);
+  }
+
   return (
-    <main className="flex min-h-screen items-center justify-center px-6 py-16">
-      <div className="glass w-full max-w-lg p-8 sm:p-10">
-        <a href="#/" className="text-sm text-white/55 transition hover:text-white">
+    <main className="flex min-h-screen items-center justify-center bg-haze px-6 py-16">
+      <div className="card-white w-full max-w-lg p-8 sm:p-10">
+        <a href="#/" className="text-sm text-ink-soft transition hover:text-ink">
           ← Voltar à loja
         </a>
-        <h1 className="mt-4 font-display text-3xl font-extrabold tracking-tight">
+        <h1 className="mt-4 text-center font-display text-3xl font-extrabold tracking-tight text-ink">
           Rastrear pedido
         </h1>
-        <p className="mt-2 text-sm text-white/60">
+        <p className="mt-2 text-center text-sm text-ink-soft">
           Informe o número do pedido e o e-mail usado na compra.
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <div>
-            <label htmlFor="track-order-id" className="mb-1.5 block text-sm font-semibold">
+            <label htmlFor="track-order-id" className="mb-1.5 block text-sm font-medium text-ink">
               Número do pedido
             </label>
             <input
               id="track-order-id"
               value={orderId}
               onChange={(e) => setOrderId(e.target.value)}
-              placeholder="ex.: 3f2a1b9c-…"
+              placeholder="ex.: 318798"
               required
-              className="w-full rounded-xl border border-white/20 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder-white/35 focus:border-cyan-300/50 focus:outline-none"
+              className="w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink-soft/60 focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/25"
             />
           </div>
           <div>
-            <label htmlFor="track-email" className="mb-1.5 block text-sm font-semibold">
+            <label htmlFor="track-email" className="mb-1.5 block text-sm font-medium text-ink">
               E-mail da compra
             </label>
             <input
@@ -126,13 +143,13 @@ export default function TrackOrder() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="voce@email.com"
               required
-              className="w-full rounded-xl border border-white/20 bg-white/[0.06] px-4 py-3 text-sm text-white placeholder-white/35 focus:border-cyan-300/50 focus:outline-none"
+              className="w-full rounded-xl border border-line bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-ink-soft/60 focus:border-accent focus-visible:ring-2 focus-visible:ring-accent/25"
             />
           </div>
           <button
             type="submit"
             disabled={loading}
-            className="btn-gradient w-full px-6 py-3.5 text-base disabled:opacity-60"
+            className="btn-primary w-full px-6 py-3.5 text-base"
           >
             {loading ? "Consultando…" : "Rastrear"}
           </button>
@@ -141,18 +158,20 @@ export default function TrackOrder() {
         {error && (
           <p
             role="alert"
-            className="mt-5 rounded-xl border border-rose-400/30 bg-rose-400/10 p-4 text-sm font-medium text-rose-200"
+            className="mt-5 rounded-xl border border-red-200 bg-red-50 p-4 text-sm font-medium text-red-700"
           >
             {error}
           </p>
         )}
 
         {result && (
-          <div className="mt-7 border-t border-white/10 pt-6">
+          <div className="mt-7 border-t border-line-soft pt-6">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <div className="text-xs uppercase tracking-wide text-white/45">Pedido</div>
-                <div className="font-mono text-sm text-white/80">{result.orderId}</div>
+                <div className="text-xs uppercase tracking-wide text-ink-soft">Pedido</div>
+                <div className="font-mono text-sm font-semibold text-ink">
+                  {result.orderNumber != null ? `#${result.orderNumber}` : result.orderId}
+                </div>
               </div>
               <span
                 className={`shrink-0 rounded-full border px-3 py-1 text-xs font-semibold ${statusMeta(result.status).chip}`}
@@ -161,19 +180,19 @@ export default function TrackOrder() {
               </span>
             </div>
 
-            <div className="mt-3 text-sm text-white/60">
-              Valor: <span className="text-white/85">{formatBRL(result.amountCents)}</span>
+            <div className="mt-3 text-sm text-ink-soft">
+              Valor: <span className="font-medium text-ink">{formatBRL(result.amountCents)}</span>
               {" · "}Feito em {formatDate(result.createdAt)}
             </div>
 
             <Timeline status={result.status} />
 
             {result.trackingCode && (
-              <div className="mt-6 rounded-2xl border border-cyan-300/25 bg-cyan-400/[0.06] p-4 text-center">
-                <div className="text-xs uppercase tracking-wide text-white/45">
+              <div className="mt-6 rounded-2xl border border-accent/25 bg-accent/[0.04] p-4 text-center">
+                <div className="text-xs uppercase tracking-wide text-ink-soft">
                   Código de rastreio
                 </div>
-                <div className="mt-1 font-mono text-lg font-bold tracking-wider text-white">
+                <div className="mt-1 font-mono text-lg font-bold tracking-wider text-ink">
                   {result.trackingCode}
                 </div>
                 {result.trackingUrl && (
@@ -181,7 +200,7 @@ export default function TrackOrder() {
                     href={result.trackingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-gradient mt-4 inline-block px-6 py-2.5 text-sm"
+                    className="btn-primary mt-4 inline-block px-6 py-2.5 text-sm"
                   >
                     Rastrear no site do transportador
                   </a>
@@ -190,7 +209,7 @@ export default function TrackOrder() {
             )}
 
             {result.status === "paid" && (
-              <p className="mt-5 rounded-xl border border-white/10 bg-white/[0.05] p-3 text-sm text-white/60">
+              <p className="mt-5 rounded-xl border border-line-soft bg-haze p-3 text-sm text-ink-soft">
                 Seu pagamento foi aprovado e o pedido está sendo preparado. O código de
                 rastreio aparecerá aqui assim que ele for despachado.
               </p>

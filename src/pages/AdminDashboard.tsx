@@ -95,7 +95,10 @@ function OrderCard({
         </div>
         <div className="col-span-2">
           <div className="text-xs uppercase tracking-wide text-white/40">Pedido</div>
-          <div className="font-mono text-xs text-white/60">{order.id}</div>
+          <div className="font-mono text-sm font-semibold text-white/80">
+            {order.order_number != null ? `#${order.order_number}` : "—"}
+          </div>
+          <div className="font-mono text-[11px] text-white/40">{order.id}</div>
           <div className="text-xs text-white/45">Criado em {formatDateTime(order.created_at)}</div>
         </div>
       </div>
