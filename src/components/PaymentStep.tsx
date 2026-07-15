@@ -5,6 +5,16 @@ import { product } from "../config/product";
 import { ApiError, processPayment, trackOrder, type PixData } from "../lib/api";
 import { formatBRL } from "../lib/money";
 
+// Validade do Pix exibida no contador. Manter em sincronia com
+// PIX_EXPIRATION_MINUTES do process-payment (o MP cancela no servidor).
+const PIX_TTL_SECONDS = 10 * 60;
+
+function formatCountdown(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 // Inicializa o SDK uma única vez com a public key (segura para o frontend).
 let mpInitialized = false;
 function ensureMpInitialized(): void {
@@ -51,6 +61,7 @@ export default function PaymentStep({
 }: PaymentStepProps) {
   const [result, setResult] = useState<PaymentResult>({ kind: "idle" });
   const [copied, setCopied] = useState(false);
+  const [pixSecondsLeft, setPixSecondsLeft] = useState(PIX_TTL_SECONDS);
   // Enquanto o Brick do Mercado Pago não termina de carregar, mostramos um
   // overlay de "carregando". Sem esse sinal, a área fica em branco e o cliente
   // acha que travou — e abandona a compra.
@@ -98,6 +109,28 @@ export default function PaymentStep({
       if (timer !== undefined) window.clearTimeout(timer);
     };
   }, [result.kind, orderId, customerEmail, onApproved]);
+
+  // Contador regressivo do Pix. Espelha a expiração do lado do MP
+  // (date_of_expiration); ao zerar, volta para a escolha de pagamento no
+  // Brick — o pagamento antigo morre no MP e o retry gera um código novo.
+  useEffect(() => {
+    if (result.kind !== "pix") return;
+    setPixSecondsLeft(PIX_TTL_SECONDS);
+    const deadline = Date.now() + PIX_TTL_SECONDS * 1000;
+    const timer = window.setInterval(() => {
+      const left = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      setPixSecondsLeft(left);
+      if (left <= 0) {
+        window.clearInterval(timer);
+        setBrickReady(false);
+        setResult({
+          kind: "rejected",
+          detail: "O tempo para pagar o Pix acabou. Escolha a forma de pagamento e gere um novo código.",
+        });
+      }
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [result.kind]);
 
   // Se o Brick demorar (a API payment_methods do MP às vezes trava ~15s),
   // trocamos a mensagem para tranquilizar o cliente de que não está travado.
@@ -189,6 +222,16 @@ export default function PaymentStep({
             className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-ink"
           />
           Aguardando o pagamento — esta tela avança sozinha.
+        </p>
+        <p className="mt-2 text-sm text-ink-soft">
+          O código expira em{" "}
+          <span
+            className={`font-semibold tabular-nums ${
+              pixSecondsLeft < 60 ? "text-red-600" : "text-ink"
+            }`}
+          >
+            {formatCountdown(pixSecondsLeft)}
+          </span>
         </p>
         <p className="mt-3 rounded-xl bg-haze p-3 text-xs text-ink-soft">
           Se preferir fechar a página, tudo bem: você também receberá a confirmação do pedido por e-mail.

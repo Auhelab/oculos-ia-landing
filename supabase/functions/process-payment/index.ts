@@ -10,6 +10,11 @@ import { sendPaidEmailOnce } from "../_shared/order-mailer.ts";
 
 const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 
+// Validade do Pix: o MP cancela o pagamento após esse prazo e notifica o
+// webhook, que marca o pedido como rejeitado. Manter em sincronia com o
+// contador PIX_TTL_SECONDS exibido no PaymentStep do frontend.
+const PIX_EXPIRATION_MINUTES = 10;
+
 interface ProcessPaymentBody {
   orderId?: unknown;
   // formData do Payment Brick: shape varia entre cartão e Pix.
@@ -47,7 +52,7 @@ Deno.serve(async (req) => {
     // Busca o pedido para obter o valor autoritativo e evitar recobrança.
     const { data: order, error: orderError } = await supabase
       .from("orders")
-      .select("id, amount_cents, status")
+      .select("id, amount_cents, status, mp_payment_id")
       .eq("id", orderId)
       .maybeSingle();
 
@@ -66,6 +71,17 @@ Deno.serve(async (req) => {
       notification_url: `${Deno.env.get("SUPABASE_URL")}/functions/v1/mp-webhook`,
     };
 
+    // Pix expira em PIX_EXPIRATION_MINUTES — o MP cancela sozinho e o webhook
+    // rejeita o pedido. Cartão não leva o campo (aprovação é síncrona).
+    const isPix = String((formData as Record<string, unknown>).payment_method_id ?? "") === "pix";
+    if (isPix) {
+      paymentPayload.date_of_expiration = new Date(
+        Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000,
+      )
+        .toISOString()
+        .replace("Z", "+00:00");
+    }
+
     await supabase.from("orders").update({ status: "processing" }).eq("id", order.id);
 
     const mpResponse = await fetch("https://api.mercadopago.com/v1/payments", {
@@ -73,8 +89,13 @@ Deno.serve(async (req) => {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
-        // Idempotência: reenvios do mesmo pedido não geram cobrança dupla.
-        "X-Idempotency-Key": order.id,
+        // Idempotência: duplo-clique no mesmo pedido não gera cobrança dupla
+        // (mesma chave). Após um pagamento cancelado/expirado/rejeitado, a
+        // chave muda (inclui o id do pagamento anterior) — sem isso o MP
+        // devolveria o mesmo pagamento morto no retry.
+        "X-Idempotency-Key": order.mp_payment_id
+          ? `${order.id}:${order.mp_payment_id}`
+          : order.id,
       },
       body: JSON.stringify(paymentPayload),
     });
