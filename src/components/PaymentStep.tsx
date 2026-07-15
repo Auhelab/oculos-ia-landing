@@ -234,6 +234,18 @@ export default function PaymentStep({
         <p className="mt-3 rounded-xl bg-haze p-3 text-xs text-ink-soft">
           Se preferir fechar a página, tudo bem: você também receberá a confirmação do pedido por e-mail.
         </p>
+        <button
+          type="button"
+          onClick={() => {
+            // Abandona este código e volta pra escolha Pix/cartão no Brick.
+            // O pagamento antigo morre sozinho no MP em até 10 min.
+            setBrickReady(false);
+            setResult({ kind: "idle" });
+          }}
+          className="mt-5 text-sm text-ink-soft transition hover:text-ink"
+        >
+          ← Escolher outra forma de pagamento
+        </button>
       </div>
     );
   }
