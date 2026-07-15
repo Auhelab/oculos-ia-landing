@@ -90,11 +90,10 @@ export default function PaymentStep({
           return;
         }
         if (res.status === "rejected" || res.status === "refunded") {
+          // Pix cancelado/expirado no MP: volta silenciosamente para a
+          // escolha de pagamento (sem alerta, a pedido do dono do produto).
           setBrickReady(false);
-          setResult({
-            kind: "rejected",
-            detail: "O Pix foi cancelado ou expirou. Gere um novo para concluir.",
-          });
+          setResult({ kind: "idle" });
           return;
         }
       } catch {
@@ -122,11 +121,10 @@ export default function PaymentStep({
       setPixSecondsLeft(left);
       if (left <= 0) {
         window.clearInterval(timer);
+        // Volta silenciosamente para a escolha de pagamento no Brick —
+        // sem mensagem de expiração, a pedido do dono do produto.
         setBrickReady(false);
-        setResult({
-          kind: "rejected",
-          detail: "O tempo para pagar o Pix acabou. Escolha a forma de pagamento e gere um novo código.",
-        });
+        setResult({ kind: "idle" });
       }
     }, 1000);
     return () => window.clearInterval(timer);
