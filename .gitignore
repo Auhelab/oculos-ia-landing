@@ -8,6 +8,7 @@ dist
 
 # Log do auto-sync (local, por máquina)
 .autosync.log
+.autosync-pause
 
 # Supabase CLI local state (nao versionar)
 supabase/.temp

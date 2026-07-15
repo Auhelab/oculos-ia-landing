@@ -47,3 +47,13 @@ Register-ScheduledTask -TaskName "oculos-ia-git-autosync" `
 
 Pronto — a partir daí seu branch se sincroniza sozinho. Para compartilhar, rode
 `powershell scripts\git-publish.ps1`.
+
+## Setup no macOS (Henrique)
+
+- Branch pessoal: `dev/henrique`.
+- **`scripts/git-autosync.sh`** — versão mac do auto-sync, agendada via launchd
+  (`~/Library/LaunchAgents/com.auhelab.oculos-ia.git-autosync.plist`) a cada
+  **40 min**. Diferença: além de sincronizar o branch, **publica no `main`
+  automaticamente** (push fast-forward). Em conflito, para e avisa.
+- Pausar: criar um arquivo `.autosync-pause` na raiz do repo (apagar para
+  retomar), ou `launchctl unload ~/Library/LaunchAgents/com.auhelab.oculos-ia.git-autosync.plist`.
