@@ -6,6 +6,9 @@ dist
 !.env.example
 .DS_Store
 
+# Log do auto-sync (local, por máquina)
+.autosync.log
+
 # Supabase CLI local state (nao versionar)
 supabase/.temp
 
