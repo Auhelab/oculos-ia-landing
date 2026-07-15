@@ -32,12 +32,20 @@ export default function Nav() {
           ))}
         </ul>
 
-        <a
-          href="#checkout"
-          className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-hover"
-        >
-          Comprar
-        </a>
+        <div className="flex items-center gap-2.5">
+          <a
+            href="#/rastreio"
+            className="rounded-full bg-ink px-4 py-2 text-sm font-semibold text-white transition hover:bg-black"
+          >
+            Rastrear<span className="hidden sm:inline"> sua compra</span>
+          </a>
+          <a
+            href="#checkout"
+            className="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-accent-hover"
+          >
+            Comprar
+          </a>
+        </div>
       </nav>
     </header>
   );
