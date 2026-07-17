@@ -100,6 +100,13 @@ export function processPayment(
 // Rastreio do pedido (cliente) — função track-order.
 // ---------------------------------------------------------------------------
 
+export interface TrackingEvent {
+  time: string | null;
+  description: string;
+  location: string | null;
+  stage: string | null;
+}
+
 export interface TrackResult {
   orderId: string;
   orderNumber: number | null;
@@ -109,6 +116,8 @@ export interface TrackResult {
   shippedAt: string | null;
   trackingCode: string | null;
   trackingUrl: string | null;
+  trackingStatus: string | null;
+  trackingEvents: TrackingEvent[] | null;
 }
 
 export function trackOrder(orderId: string, email: string): Promise<TrackResult> {

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ApiError, trackOrder, type TrackResult } from "../lib/api";
+import { ApiError, trackOrder, type TrackingEvent, type TrackResult } from "../lib/api";
 import { formatBRL } from "../lib/money";
 import { JOURNEY, journeyIndex, statusMeta } from "../lib/orderStatus";
 import { product } from "../config/product";
@@ -19,6 +19,49 @@ function formatDate(iso: string | null): string {
     month: "long",
     year: "numeric",
   });
+}
+
+function formatDateTime(iso: string | null): string {
+  if (!iso) return "";
+  return new Date(iso).toLocaleString("pt-BR", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/** Histórico detalhado de eventos vindo do transportador (via 17TRACK). */
+function EventsTimeline({ events }: { events: TrackingEvent[] }) {
+  return (
+    <div className="mt-6">
+      <div className="mb-3 text-xs uppercase tracking-wide text-ink-soft">
+        Histórico de movimentação
+      </div>
+      <ol className="space-y-4">
+        {events.map((ev, i) => (
+          <li key={i} className="flex gap-3">
+            <div className="flex flex-col items-center">
+              <span
+                className={`mt-1 h-2.5 w-2.5 shrink-0 rounded-full ${
+                  i === 0 ? "bg-accent" : "bg-line"
+                }`}
+              />
+              {i < events.length - 1 && <span className="w-px flex-1 bg-line-soft" />}
+            </div>
+            <div className="-mt-0.5 pb-1">
+              <div className={`text-sm ${i === 0 ? "font-medium text-ink" : "text-ink-soft"}`}>
+                {ev.description}
+              </div>
+              <div className="mt-0.5 text-xs text-ink-soft/70">
+                {[formatDateTime(ev.time), ev.location].filter(Boolean).join(" · ")}
+              </div>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
 }
 
 /** Linha do tempo da jornada de entrega. */
@@ -217,6 +260,10 @@ export default function TrackOrder() {
                   </a>
                 )}
               </div>
+            )}
+
+            {result.trackingEvents && result.trackingEvents.length > 0 && (
+              <EventsTimeline events={result.trackingEvents} />
             )}
 
             {result.status === "paid" && (

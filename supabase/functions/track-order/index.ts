@@ -43,7 +43,7 @@ Deno.serve(async (req) => {
     const baseQuery = supabase
       .from("orders")
       .select(
-        "id, order_number, status, amount_cents, created_at, shipped_at, tracking_code, tracking_url, customer_email",
+        "id, order_number, status, amount_cents, created_at, shipped_at, tracking_code, tracking_url, tracking_status, tracking_events, customer_email",
       );
     const { data, error } = await (byNumber
       ? baseQuery.eq("order_number", Number(cleaned))
@@ -70,6 +70,8 @@ Deno.serve(async (req) => {
       shippedAt: data.shipped_at,
       trackingCode: data.tracking_code,
       trackingUrl: data.tracking_url,
+      trackingStatus: data.tracking_status,
+      trackingEvents: data.tracking_events,
     });
   } catch (error) {
     console.error("track-order falhou:", error);

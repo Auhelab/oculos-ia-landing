@@ -15,6 +15,11 @@
 import { handlePreflight, jsonResponse } from "../_shared/cors.ts";
 import { createAdminClient } from "../_shared/supabase.ts";
 import { sendShippedEmailOnce } from "../_shared/order-mailer.ts";
+import {
+  register17Track,
+  track17Configured,
+  track17PublicUrl,
+} from "../_shared/track17.ts";
 
 const ADMIN_API_KEY = Deno.env.get("ADMIN_API_KEY");
 
@@ -89,12 +94,17 @@ Deno.serve(async (req) => {
         return jsonResponse({ error: "orderId e trackingCode são obrigatórios." }, 400);
       }
 
+      // URL de rastreio: usa a informada ou, se o 17TRACK estiver ativo, cai
+      // na página pública dele (o cliente acompanha mesmo antes do 1º push).
+      const publicUrl =
+        trackingUrl || (track17Configured() ? track17PublicUrl(trackingCode) : "");
+
       // Só permite despachar pedidos pagos (ou já despachados, p/ corrigir código).
       const { data: updated, error } = await supabase
         .from("orders")
         .update({
           tracking_code: trackingCode,
-          tracking_url: trackingUrl || null,
+          tracking_url: publicUrl || null,
           status: "shipped",
           shipped_at: new Date().toISOString(),
         })
@@ -109,6 +119,20 @@ Deno.serve(async (req) => {
           { error: "Pedido não encontrado ou ainda não pago." },
           409,
         );
+      }
+
+      // Registra o número no 17TRACK para acompanhamento automático via webhook.
+      // Best-effort: nunca falha o despacho se o 17TRACK estiver indisponível.
+      if (track17Configured()) {
+        const reg = await register17Track(trackingCode, orderId);
+        if (reg.ok && reg.carrier) {
+          await supabase
+            .from("orders")
+            .update({ carrier: reg.carrier })
+            .eq("id", orderId);
+        } else if (!reg.ok) {
+          console.warn("register 17TRACK falhou:", reg.error);
+        }
       }
 
       // E-mail de despacho (idempotente).

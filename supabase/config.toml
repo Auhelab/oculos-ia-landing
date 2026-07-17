@@ -21,3 +21,8 @@ verify_jwt = false
 # Rastreio público: o frontend chama com a anon key (como create-order).
 # A proteção anti-enumeração é o par pedido+e-mail exigido no corpo.
 verify_jwt = true
+
+[functions.tracking-webhook]
+# O 17TRACK chama esta URL sem JWT. A autenticidade vem da assinatura do header
+# `sign` (SHA-256 de corpo_cru + "/" + TRACK17_API_KEY), validada na função.
+verify_jwt = false
