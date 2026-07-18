@@ -1,90 +1,65 @@
-# git-autopublish.ps1
-# Publica automaticamente o SEU branch pessoal no 'main' a cada rodada
-# (pensado para o Agendador de Tarefas do Windows, a cada 40 min).
+# git-autopublish.ps1 — sincroniza o SEU branch pessoal e PUBLICA no main a cada 40 min.
+# Nunca destroi trabalho: em conflito ao integrar o main, aborta e apenas avisa.
+# Pausar: crie um arquivo  .autosync-pause  na raiz do repo (apague para retomar).
 #
-# A cada rodada:
-#   1) commita seu trabalho local (se houver)
-#   2) envia seu branch pessoal (backup)
-#   3) integra o main atual (trabalho do parceiro) sem destruir nada
-#   4) mescla seu branch no main e envia o main
-#   5) volta para o seu branch, ja sincronizado com o main
-#
-# SEGURANCA: em qualquer conflito, aborta o merge, volta para o seu branch e
-# apenas avisa no log. NUNCA deixa o repo no meio de um merge nem preso no main.
-#
-# Portavel: descobre a raiz do repo pela propria localizacao do script.
+# Registrado no Agendador de Tarefas como "oculos-ia-git-autopublish" (sem
+# -ExecutionPolicy Bypass: a politica RemoteSigned ja roda script local).
+# Portavel: descobre a raiz do repo pela propria localizacao do script (scripts/).
 
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $RepoRoot
-$logFile = Join-Path $RepoRoot ".autopublish.log"
+$logFile = Join-Path $RepoRoot ".autosync.log"
 function Log([string]$m) {
   "$([DateTime]::Now.ToString('yyyy-MM-dd HH:mm:ss')) $m" | Tee-Object -FilePath $logFile -Append | Out-Null
 }
 
+# Pausa manual: enquanto houver .autosync-pause na raiz, nao publica (util quando
+# ha algo pela metade que nao pode ir para o main). Apague o arquivo para retomar.
+if (Test-Path (Join-Path $RepoRoot ".autosync-pause")) {
+  Log "[autosync] pausado (.autosync-pause presente) - pulei esta rodada."
+  exit 0
+}
+
 # Nao mexe se ha um merge/rebase pela metade (evita bagunca automatica).
 if ((Test-Path ".git/MERGE_HEAD") -or (Test-Path ".git/rebase-merge") -or (Test-Path ".git/rebase-apply")) {
-  Log "[autopublish] merge/rebase em andamento - pulei esta rodada."
+  Log "[autosync] merge/rebase em andamento - pulei esta rodada."
   exit 0
 }
 
 $branch = (git rev-parse --abbrev-ref HEAD).Trim()
 if ($branch -eq "main") {
-  # Ja esta no main: so garante que o trabalho local esta commitado e enviado.
-  git add -A
-  if (git status --porcelain) {
-    git commit -q -m "wip: autopublish $([DateTime]::Now.ToString('yyyy-MM-dd HH:mm'))"
-  }
-  git pull -q --no-edit origin main
-  if ($LASTEXITCODE -ne 0) { git merge --abort 2>$null; Log "[autopublish] CONFLITO ao atualizar o main - resolva manualmente."; exit 1 }
-  git push -q origin main
-  Log "[autopublish] OK - main atualizado (voce estava no main)."
+  Log "[autosync] voce esta no 'main' - pulei. Use um branch pessoal (ex.: dev/seu-nome)."
   exit 0
 }
 
-try {
-  # 1) Commit do trabalho local (se houver algo).
-  git add -A
-  if (git status --porcelain) {
-    git commit -q -m "wip: autopublish $([DateTime]::Now.ToString('yyyy-MM-dd HH:mm'))"
-    Log "[autopublish] commit local em '$branch'."
-  }
-
-  # 2) Publica o seu branch (backup + compartilhamento).
-  git push -q -u origin $branch
-  if ($LASTEXITCODE -ne 0) { Log "[autopublish] falha ao enviar '$branch' - abortei esta rodada."; exit 1 }
-
-  # 3) Atualiza o main local com o remoto (trabalho ja consolidado do parceiro).
-  git fetch -q origin
-  git checkout -q main
-  git pull -q --ff-only origin main
-  if ($LASTEXITCODE -ne 0) {
-    Log "[autopublish] main local divergiu do remoto - resolva manualmente. Voltando ao branch."
-    git checkout -q $branch
-    exit 1
-  }
-
-  # 4) Mescla o seu branch no main.
-  git merge --no-edit $branch
-  if ($LASTEXITCODE -ne 0) {
-    git merge --abort
-    git checkout -q $branch
-    Log "[autopublish] CONFLITO ao mesclar '$branch' em main - resolva com scripts\git-publish.ps1. Seu trabalho JA esta salvo em '$branch'."
-    exit 1
-  }
-  git push -q origin main
-  if ($LASTEXITCODE -ne 0) { Log "[autopublish] falha ao enviar o main (talvez o parceiro tenha empurrado). Tento na proxima rodada."; git checkout -q $branch; exit 1 }
-
-  # 5) Volta para o seu branch e traz o main integrado de volta.
-  git checkout -q $branch
-  git merge --no-edit main | Out-Null
-  git push -q origin $branch
-  Log "[autopublish] OK - '$branch' publicado no main e sincronizado."
+# 1) Commit do trabalho local (se houver algo).
+git add -A
+if (git status --porcelain) {
+  git commit -q -m "wip: autosync $([DateTime]::Now.ToString('yyyy-MM-dd HH:mm'))"
+  Log "[autosync] commit local em '$branch'."
 }
-finally {
-  # Garante que nunca terminamos presos no 'main'.
-  $now = (git rev-parse --abbrev-ref HEAD).Trim()
-  if ($now -eq "main" -and $branch -ne "main") {
-    git checkout -q $branch 2>$null
-    Log "[autopublish] (finally) voltei para '$branch'."
-  }
+
+# 2) Publica o seu branch (backup).
+git push -q -u origin $branch
+if ($LASTEXITCODE -ne 0) { Log "[autosync] ERRO no push de '$branch' - verifique credenciais/rede."; exit 1 }
+Log "[autosync] push de '$branch'."
+
+# 3) Integra o main sem destruir nada.
+git fetch -q origin main
+git merge --no-edit origin/main
+if ($LASTEXITCODE -ne 0) {
+  git merge --abort
+  Log "[autosync] CONFLITO ao integrar o main - resolva manualmente. Seu trabalho JA foi enviado em '$branch'."
+  exit 1
+}
+
+# 4) Re-publica o seu branch ja com o main integrado.
+git push -q origin $branch
+
+# 5) Publica no main (fast-forward garantido: o branch ja contem o origin/main).
+git push -q origin "HEAD:main"
+if ($LASTEXITCODE -eq 0) {
+  Log "[autosync] OK - '$branch' sincronizado e publicado no main."
+} else {
+  Log "[autosync] push pro main rejeitado (main mudou agora) - a proxima rodada integra."
 }

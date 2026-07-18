@@ -7,7 +7,7 @@ import { formatBRL } from "../lib/money";
 
 // Validade do Pix exibida no contador. Manter em sincronia com
 // PIX_EXPIRATION_MINUTES do process-payment (o MP cancela no servidor).
-const PIX_TTL_SECONDS = 10 * 60;
+const PIX_TTL_SECONDS = 5 * 60;
 
 function formatCountdown(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -238,7 +238,7 @@ export default function PaymentStep({
           type="button"
           onClick={() => {
             // Abandona este código e volta pra escolha Pix/cartão no Brick.
-            // O pagamento antigo morre sozinho no MP em até 10 min.
+            // O pagamento antigo morre sozinho no MP em até 5 min.
             setBrickReady(false);
             setResult({ kind: "idle" });
           }}
@@ -290,7 +290,14 @@ export default function PaymentStep({
           aria-hidden={!brickReady}
         >
           <Payment
-            initialization={{ amount: amountCents / 100 }}
+            initialization={{
+              amount: amountCents / 100,
+              // Pré-preenche o e-mail já coletado no passo anterior. Quando o
+              // e-mail vem preenchido, o Brick ESCONDE o campo de e-mail
+              // (inclusive no Pix) — o cliente vai direto ao QR code, sem
+              // digitar de novo. (MP "Fast Payments Flow".)
+              payer: { email: customerEmail },
+            }}
             customization={{
               paymentMethods: {
                 creditCard: "all",

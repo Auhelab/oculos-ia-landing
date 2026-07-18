@@ -13,7 +13,7 @@ const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 // Validade do Pix: o MP cancela o pagamento após esse prazo e notifica o
 // webhook, que marca o pedido como rejeitado. Manter em sincronia com o
 // contador PIX_TTL_SECONDS exibido no PaymentStep do frontend.
-const PIX_EXPIRATION_MINUTES = 10;
+const PIX_EXPIRATION_MINUTES = 5;
 
 interface ProcessPaymentBody {
   orderId?: unknown;
