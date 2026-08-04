@@ -68,8 +68,8 @@ const testimonials: Testimonial[] = [
     name: "Patrícia L.",
     location: "Fortaleza, CE",
     rating: 5,
-    photo: "/images/reviews/review-7.webp",
-    photoAlt: "Cliente segurando o óculos inteligente preto, foto enviada por uma cliente",
+    photo: "/images/reviews/review-c5.jpg",
+    photoAlt: "Óculos inteligente sobre a caixa do produto, com os ícones de câmera, tradução em tempo real e assistente de voz, foto de uma cliente",
   },
 ];
 
