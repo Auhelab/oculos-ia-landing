@@ -23,8 +23,8 @@ const testimonials: Testimonial[] = [
     name: "Camila R.",
     location: "Curitiba, PR",
     rating: 5,
-    photo: "/images/reviews/review-3.webp",
-    photoAlt: "Óculos inteligente preto na mão, ao lado da caixa, foto enviada por uma cliente",
+    photo: "/images/reviews/review-c1.jpg",
+    photoAlt: "Óculos inteligente preto segurado na mão, mostrando o tamanho da armação, foto enviada por uma cliente",
   },
   {
     quote:
@@ -32,8 +32,8 @@ const testimonials: Testimonial[] = [
     name: "Anderson P.",
     location: "São Paulo, SP",
     rating: 5,
-    photo: "/images/reviews/review-1.webp",
-    photoAlt: "Unboxing do óculos sobre a mesa, com as lentes e acessórios, foto de um cliente",
+    photo: "/images/reviews/review-c2.jpg",
+    photoAlt: "Óculos ao lado da caixa e da bolsinha de guardar, com as lentes extras, foto de um cliente",
   },
   {
     quote:
@@ -50,8 +50,8 @@ const testimonials: Testimonial[] = [
     name: "Rogério M.",
     location: "Belo Horizonte, MG",
     rating: 5,
-    photo: "/images/reviews/review-6.webp",
-    photoAlt: "Caixa do óculos inteligente com IA, foto enviada por um cliente",
+    photo: "/images/reviews/review-c3.jpg",
+    photoAlt: "Óculos inteligente na mão com a câmera visível na armação e a caixa ao fundo, foto de um cliente",
   },
   {
     quote:
@@ -59,8 +59,8 @@ const testimonials: Testimonial[] = [
     name: "Diego S.",
     location: "Porto Alegre, RS",
     rating: 4,
-    photo: "/images/reviews/review-2.webp",
-    photoAlt: "Close do óculos inteligente preto dentro da caixa, foto de um cliente",
+    photo: "/images/reviews/review-c4.jpg",
+    photoAlt: "Óculos inteligente preto apoiado sobre a caixa aberta do produto, foto de um cliente",
   },
   {
     quote:
