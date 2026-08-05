@@ -23,7 +23,7 @@ export const product: ProductConfig = {
   id: "oculos-inteligentes-ia-2026",
   name: "Smart Glasses",
   tagline: "Câmera, tradução por IA e música · direto nos seus óculos.",
-  priceCents: 100,
+  priceCents: 39700,
   compareAtPriceCents: 59990,
   maxInstallments: 6,
   stockLeft: 23,
