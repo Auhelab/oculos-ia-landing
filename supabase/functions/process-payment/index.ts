@@ -13,7 +13,12 @@ const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 // Validade do Pix: o MP cancela o pagamento após esse prazo e notifica o
 // webhook, que marca o pedido como rejeitado. Manter em sincronia com o
 // contador PIX_TTL_SECONDS exibido no PaymentStep do frontend.
-const PIX_EXPIRATION_MINUTES = 5;
+//
+// NUNCA baixar de 8 minutos. Medido em produção em 05/08/2026: com 5 minutos o
+// Mercado Pago aceita a criação (HTTP 201, status pending) e cancela a cobrança
+// 3-4 segundos depois com status_detail "expired" — o cliente recebe um QR que
+// o banco recusa. De 8 minutos em diante a cobrança se mantém pending.
+const PIX_EXPIRATION_MINUTES = 10;
 
 interface ProcessPaymentBody {
   orderId?: unknown;
@@ -66,15 +71,20 @@ Deno.serve(async (req) => {
     // — o caso real é o Pix gerado antes de o cliente voltar e escolher cartão —
     // ele morre aqui. Sem isso os dois ficam pagáveis ao mesmo tempo e o cliente
     // pode pagar duas vezes sem que nada no sistema perceba.
+    const isPix =
+      String((formData as Record<string, unknown>).payment_method_id ?? "") === "pix";
+
     if (order.mp_payment_id) {
-      const previous = await settlePreviousPayment(order.mp_payment_id);
+      const previous = await fetchPayment(order.mp_payment_id);
+      const previousStatus = String(previous?.status ?? "");
 
       // O anterior já estava pago e o webhook ainda não tinha chegado: não cobra
       // de novo. Devolve como aprovado para o cliente seguir para a confirmação.
-      if (previous.approved) {
+      if (previousStatus === "approved") {
+        const statusDetail = String(previous?.status_detail ?? "accredited");
         await supabase
           .from("orders")
-          .update({ status: "paid", mp_status_detail: previous.statusDetail })
+          .update({ status: "paid", mp_status_detail: statusDetail })
           .eq("id", order.id);
         await sendPaidEmailOnce(supabase, order.id);
 
@@ -82,9 +92,28 @@ Deno.serve(async (req) => {
           orderId: order.id,
           paymentId: order.mp_payment_id,
           status: "approved",
-          statusDetail: previous.statusDetail,
+          statusDetail,
           pix: null,
         });
+      }
+
+      if (previousStatus === "pending" || previousStatus === "in_process") {
+        // Pix ainda vivo e o cliente pediu Pix de novo (duplo clique, recarregar
+        // a página): devolve o MESMO código. Criar outro mataria este — e quem
+        // estivesse com ele aberto no banco levaria recusa.
+        if (isPix && String(previous?.payment_method_id ?? "") === "pix") {
+          return jsonResponse({
+            orderId: order.id,
+            paymentId: order.mp_payment_id,
+            status: previousStatus,
+            statusDetail: String(previous?.status_detail ?? ""),
+            pix: extractPix(previous),
+          });
+        }
+
+        // Trocou de meio de pagamento (ex.: do Pix para o cartão): aí sim o
+        // anterior precisa morrer, senão os dois ficam pagáveis.
+        await cancelPayment(order.mp_payment_id);
       }
     }
 
@@ -99,7 +128,6 @@ Deno.serve(async (req) => {
 
     // Pix expira em PIX_EXPIRATION_MINUTES — o MP cancela sozinho e o webhook
     // rejeita o pedido. Cartão não leva o campo (aprovação é síncrona).
-    const isPix = String((formData as Record<string, unknown>).payment_method_id ?? "") === "pix";
     if (isPix) {
       paymentPayload.date_of_expiration = new Date(
         Date.now() + PIX_EXPIRATION_MINUTES * 60 * 1000,
@@ -156,24 +184,13 @@ Deno.serve(async (req) => {
       await sendPaidEmailOnce(supabase, order.id);
     }
 
-    // Dados do Pix (QR code + copia-e-cola), quando aplicável.
-    const poi = payment.point_of_interaction as
-      | { transaction_data?: Record<string, unknown> }
-      | undefined;
-    const txData = poi?.transaction_data;
-
     return jsonResponse({
       orderId: order.id,
       paymentId,
       status,
       statusDetail,
-      pix: txData
-        ? {
-            qrCode: String(txData.qr_code ?? ""),
-            qrCodeBase64: String(txData.qr_code_base64 ?? ""),
-            ticketUrl: String(txData.ticket_url ?? ""),
-          }
-        : null,
+      // Dados do Pix (QR code + copia-e-cola), quando aplicável.
+      pix: extractPix(payment),
     });
   } catch (error) {
     console.error("process-payment falhou:", error);
@@ -182,46 +199,56 @@ Deno.serve(async (req) => {
 });
 
 /**
- * Encerra o pagamento anterior do pedido antes de criar um novo.
- * Devolve `approved: true` quando ele já foi pago — nesse caso o chamador NÃO
- * pode cobrar de novo. Nos demais casos cancela o pagamento no MP (só pending /
- * in_process aceitam cancelamento; o resto já está encerrado).
- * Falha de rede não bloqueia a venda: seguimos com o comportamento anterior.
+ * Consulta um pagamento no MP. Devolve null quando não foi possível ler — nesse
+ * caso o chamador segue o fluxo normal, sem bloquear a venda.
  */
-async function settlePreviousPayment(
-  paymentId: string,
-): Promise<{ approved: boolean; statusDetail: string }> {
-  const auth = { Authorization: `Bearer ${MP_ACCESS_TOKEN}` };
+async function fetchPayment(paymentId: string): Promise<Record<string, unknown> | null> {
   try {
     const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
-      headers: auth,
+      headers: { Authorization: `Bearer ${MP_ACCESS_TOKEN}` },
     });
-
-    if (res.ok) {
-      const payment = (await res.json()) as Record<string, unknown>;
-      const status = String(payment.status ?? "");
-      if (status === "approved") {
-        return { approved: true, statusDetail: String(payment.status_detail ?? "accredited") };
-      }
-      // Já morto (rejected / cancelled / refunded): não há o que cancelar.
-      if (status !== "pending" && status !== "in_process") {
-        return { approved: false, statusDetail: "" };
-      }
+    if (!res.ok) {
+      console.warn(`Não foi possível consultar o pagamento ${paymentId}:`, res.status);
+      return null;
     }
+    return (await res.json()) as Record<string, unknown>;
+  } catch (error) {
+    console.warn(`Falha ao consultar o pagamento ${paymentId}:`, error);
+    return null;
+  }
+}
 
-    const cancel = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+/** Cancela um pagamento ainda vivo no MP. Nunca lança. */
+async function cancelPayment(paymentId: string): Promise<void> {
+  try {
+    const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
       method: "PUT",
-      headers: { ...auth, "Content-Type": "application/json" },
+      headers: {
+        Authorization: `Bearer ${MP_ACCESS_TOKEN}`,
+        "Content-Type": "application/json",
+      },
       body: JSON.stringify({ status: "cancelled" }),
     });
-    if (!cancel.ok) {
-      console.warn(`Não foi possível cancelar o pagamento ${paymentId}:`, cancel.status);
+    if (!res.ok) {
+      console.warn(`Não foi possível cancelar o pagamento ${paymentId}:`, res.status);
     }
   } catch (error) {
-    console.warn(`Falha ao encerrar o pagamento anterior ${paymentId}:`, error);
+    console.warn(`Falha ao cancelar o pagamento ${paymentId}:`, error);
   }
+}
 
-  return { approved: false, statusDetail: "" };
+/** Extrai QR code e copia-e-cola do Pix, quando o pagamento tiver. */
+function extractPix(payment: Record<string, unknown> | null) {
+  const poi = payment?.point_of_interaction as
+    | { transaction_data?: Record<string, unknown> }
+    | undefined;
+  const txData = poi?.transaction_data;
+  if (!txData) return null;
+  return {
+    qrCode: String(txData.qr_code ?? ""),
+    qrCodeBase64: String(txData.qr_code_base64 ?? ""),
+    ticketUrl: String(txData.ticket_url ?? ""),
+  };
 }
 
 /** Traduz o status do MP para o enum de orders.status. */

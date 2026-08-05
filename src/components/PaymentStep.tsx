@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { initMercadoPago, Payment } from "@mercadopago/sdk-react";
 import { env } from "../config/env";
 import { product } from "../config/product";
@@ -7,7 +7,7 @@ import { formatBRL } from "../lib/money";
 
 // Validade do Pix exibida no contador. Manter em sincronia com
 // PIX_EXPIRATION_MINUTES do process-payment (o MP cancela no servidor).
-const PIX_TTL_SECONDS = 5 * 60;
+const PIX_TTL_SECONDS = 10 * 60;
 
 function formatCountdown(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
@@ -67,6 +67,8 @@ export default function PaymentStep({
   // acha que travou — e abandona a compra.
   const [brickReady, setBrickReady] = useState(false);
   const [brickSlow, setBrickSlow] = useState(false);
+  // Um pagamento por vez: ver o guard em handleSubmit.
+  const submitting = useRef(false);
 
   useEffect(() => {
     ensureMpInitialized();
@@ -139,6 +141,12 @@ export default function PaymentStep({
   }, [brickReady]);
 
   async function handleSubmit({ formData }: { formData: unknown }): Promise<void> {
+    // Trava de envio: o Brick dispara onSubmit de novo se o cliente clicar duas
+    // vezes enquanto a primeira chamada está em voo. Sem ela, o mesmo pedido
+    // gera dois pagamentos no Mercado Pago — e o cliente que já estiver pagando
+    // o primeiro QR leva recusa do banco, porque o segundo cancela o anterior.
+    if (submitting.current) return;
+    submitting.current = true;
     try {
       const res = await processPayment(orderId, formData);
 
@@ -163,6 +171,8 @@ export default function PaymentStep({
           : "Falha ao processar o pagamento. Tente novamente.";
       setResult({ kind: "rejected", detail: message });
       // Resolve normalmente para exibirmos nossa própria mensagem, não a do Brick.
+    } finally {
+      submitting.current = false;
     }
   }
 
