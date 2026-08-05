@@ -15,6 +15,7 @@ import PrivacyPolicy from "./pages/PrivacyPolicy";
 import ThankYou from "./pages/ThankYou";
 import TrackOrder from "./pages/TrackOrder";
 import AdminDashboard from "./pages/AdminDashboard";
+import { useContentProtection } from "./lib/content-protection";
 
 /**
  * Roteamento mínimo por hash (#/termos, #/privacidade, #/obrigado, #/rastreio,
@@ -43,6 +44,10 @@ export default function App() {
     !route.startsWith("#/rastreio") &&
     !route.startsWith("#/admin");
   const lenisRef = useRef<Lenis | null>(null);
+
+  // Anticópia de copy/imagens/design. Vale em todas as rotas — o painel admin
+  // e os campos de formulário ficam de fora via `data-copiavel` (ver o módulo).
+  useContentProtection();
 
   // Restaura o título da aba ao voltar das páginas legais/obrigado
   useEffect(() => {

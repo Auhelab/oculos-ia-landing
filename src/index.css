@@ -42,6 +42,32 @@ html.lenis body {
     @apply bg-ink text-white;
   }
 
+  /* Anticópia: o texto de venda não é selecionável, mas todo campo de
+     formulário e tudo marcado com data-copiavel continua livre — é por ali que
+     o cliente copia o código Pix, o número do pedido e o rastreio. */
+  body {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  input,
+  textarea,
+  select,
+  [contenteditable="true"],
+  [data-copiavel],
+  [data-copiavel] * {
+    -webkit-user-select: text;
+    user-select: text;
+  }
+
+  /* Impede arrastar a imagem pra fora e o toque longo que abre "Salvar imagem"
+     no celular. */
+  img,
+  canvas {
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+  }
+
   :focus-visible {
     @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-white;
   }
@@ -129,5 +155,24 @@ html.lenis body {
   .js [data-reveal] {
     opacity: 1;
     transform: none;
+  }
+}
+
+/* Anticópia: "Imprimir → Salvar como PDF" leva a página inteira com imagens e
+   layout. A versão impressa entrega só o aviso de autoria. As páginas legais e
+   o comprovante do pedido (data-imprimivel) continuam imprimíveis — o cliente
+   tem direito a guardar o comprovante da compra dele. */
+@media print {
+  body > *:not([data-imprimivel]) {
+    display: none !important;
+  }
+
+  body::after {
+    content: "Conteúdo protegido por direitos autorais. Reprodução não autorizada.";
+    display: block;
+    padding: 4rem 2rem;
+    font-family: sans-serif;
+    font-size: 14pt;
+    text-align: center;
   }
 }

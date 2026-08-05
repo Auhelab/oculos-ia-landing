@@ -76,7 +76,9 @@ export default function ThankYou() {
         {orderNumber && (
           <p className="mt-6 rounded-xl bg-haze p-3 text-sm text-ink-soft">
             Número do pedido:{" "}
-            <span className="font-mono font-semibold text-ink">#{orderNumber}</span>
+            <span data-copiavel className="font-mono font-semibold text-ink">
+              #{orderNumber}
+            </span>
           </p>
         )}
         <div className="mt-8 flex flex-col items-center gap-3">

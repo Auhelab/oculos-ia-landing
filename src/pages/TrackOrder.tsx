@@ -223,7 +223,7 @@ export default function TrackOrder() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <div className="text-xs uppercase tracking-wide text-ink-soft">Pedido</div>
-                <div className="font-mono text-sm font-semibold text-ink">
+                <div data-copiavel className="font-mono text-sm font-semibold text-ink">
                   {result.orderNumber != null ? `#${result.orderNumber}` : result.orderId}
                 </div>
               </div>
@@ -246,7 +246,10 @@ export default function TrackOrder() {
                 <div className="text-xs uppercase tracking-wide text-ink-soft">
                   Código de rastreio
                 </div>
-                <div className="mt-1 font-mono text-lg font-bold tracking-wider text-ink">
+                <div
+                  data-copiavel
+                  className="mt-1 font-mono text-lg font-bold tracking-wider text-ink"
+                >
                   {result.trackingCode}
                 </div>
                 {result.trackingUrl && (

@@ -38,6 +38,12 @@ export default function Footer() {
             © {new Date().getFullYear()} Todos os direitos reservados. Preços e condições
             exclusivos para compras neste site.
           </p>
+          <p className="mt-1">
+            Os textos, fotografias, layout e código desta página são obra própria e estão
+            protegidos pela Lei 9.610/98. A reprodução, total ou parcial, inclusive para
+            treinamento de sistemas de inteligência artificial, depende de autorização
+            prévia por escrito.
+          </p>
         </div>
       </div>
     </footer>
