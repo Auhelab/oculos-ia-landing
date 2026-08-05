@@ -69,13 +69,45 @@ Deno.serve(async (req) => {
     }
 
     const supabase = createAdminClient();
+    const paymentId = String(payment.id ?? dataId);
     const mappedStatus = mapMpStatus(status);
+
+    const { data: order, error: orderError } = await supabase
+      .from("orders")
+      .select("mp_payment_id, amount_cents, status")
+      .eq("id", externalReference)
+      .maybeSingle();
+
+    if (orderError) throw orderError;
+    if (!order) return jsonResponse({ received: true });
+
+    // Só o pagamento ATUAL do pedido pode mexer no status. Sem esta guarda, o
+    // cancelamento de um Pix abandonado chega depois e rebaixa para 'rejected'
+    // um pedido que já foi pago por outro meio. O pedido ainda sem pagamento
+    // gravado aceita a notificação (corrida com o process-payment).
+    if (order.mp_payment_id && order.mp_payment_id !== paymentId) {
+      console.warn(
+        `Notificação de ${paymentId} ignorada: pedido ${externalReference} está em ${order.mp_payment_id}.`,
+      );
+      return jsonResponse({ received: true });
+    }
+
+    // O MP é a fonte da verdade do status, mas o valor tem de bater com o que
+    // foi cobrado. Divergência não vira pedido pago — fica para conferência.
+    const paidCents = Math.round(Number(payment.transaction_amount ?? 0) * 100);
+    if (mappedStatus === "paid" && paidCents !== order.amount_cents) {
+      console.error(
+        `Valor divergente no pedido ${externalReference}: pago ${paidCents}, esperado ${order.amount_cents}.`,
+      );
+      return jsonResponse({ received: true });
+    }
+
     const { error } = await supabase
       .from("orders")
       .update({
         status: mappedStatus,
         mp_status_detail: statusDetail,
-        mp_payment_id: String(payment.id ?? dataId),
+        mp_payment_id: paymentId,
       })
       .eq("id", externalReference);
 

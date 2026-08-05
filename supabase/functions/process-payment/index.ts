@@ -62,6 +62,32 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Este pedido já foi pago." }, 409);
     }
 
+    // Um pedido só pode ter UM pagamento vivo por vez. Se já existe um anterior
+    // — o caso real é o Pix gerado antes de o cliente voltar e escolher cartão —
+    // ele morre aqui. Sem isso os dois ficam pagáveis ao mesmo tempo e o cliente
+    // pode pagar duas vezes sem que nada no sistema perceba.
+    if (order.mp_payment_id) {
+      const previous = await settlePreviousPayment(order.mp_payment_id);
+
+      // O anterior já estava pago e o webhook ainda não tinha chegado: não cobra
+      // de novo. Devolve como aprovado para o cliente seguir para a confirmação.
+      if (previous.approved) {
+        await supabase
+          .from("orders")
+          .update({ status: "paid", mp_status_detail: previous.statusDetail })
+          .eq("id", order.id);
+        await sendPaidEmailOnce(supabase, order.id);
+
+        return jsonResponse({
+          orderId: order.id,
+          paymentId: order.mp_payment_id,
+          status: "approved",
+          statusDetail: previous.statusDetail,
+          pix: null,
+        });
+      }
+    }
+
     // Monta o pagamento MP a partir do formData, mas o valor vem do BANCO.
     const paymentPayload: Record<string, unknown> = {
       ...formData,
@@ -154,6 +180,49 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "Falha ao processar o pagamento." }, 500);
   }
 });
+
+/**
+ * Encerra o pagamento anterior do pedido antes de criar um novo.
+ * Devolve `approved: true` quando ele já foi pago — nesse caso o chamador NÃO
+ * pode cobrar de novo. Nos demais casos cancela o pagamento no MP (só pending /
+ * in_process aceitam cancelamento; o resto já está encerrado).
+ * Falha de rede não bloqueia a venda: seguimos com o comportamento anterior.
+ */
+async function settlePreviousPayment(
+  paymentId: string,
+): Promise<{ approved: boolean; statusDetail: string }> {
+  const auth = { Authorization: `Bearer ${MP_ACCESS_TOKEN}` };
+  try {
+    const res = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      headers: auth,
+    });
+
+    if (res.ok) {
+      const payment = (await res.json()) as Record<string, unknown>;
+      const status = String(payment.status ?? "");
+      if (status === "approved") {
+        return { approved: true, statusDetail: String(payment.status_detail ?? "accredited") };
+      }
+      // Já morto (rejected / cancelled / refunded): não há o que cancelar.
+      if (status !== "pending" && status !== "in_process") {
+        return { approved: false, statusDetail: "" };
+      }
+    }
+
+    const cancel = await fetch(`https://api.mercadopago.com/v1/payments/${paymentId}`, {
+      method: "PUT",
+      headers: { ...auth, "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "cancelled" }),
+    });
+    if (!cancel.ok) {
+      console.warn(`Não foi possível cancelar o pagamento ${paymentId}:`, cancel.status);
+    }
+  } catch (error) {
+    console.warn(`Falha ao encerrar o pagamento anterior ${paymentId}:`, error);
+  }
+
+  return { approved: false, statusDetail: "" };
+}
 
 /** Traduz o status do MP para o enum de orders.status. */
 function mapMpStatus(mpStatus: string): string {

@@ -71,6 +71,35 @@ function asString(value: unknown): string {
 }
 
 /**
+ * Teto de caracteres por campo. Sem isso, um POST pode gravar megabytes em
+ * qualquer coluna de texto do pedido — o banco aceita, e nada no caminho barra.
+ * Os limites são folgados o suficiente para qualquer endereço brasileiro real.
+ */
+const MAX_LENGTH: Record<string, number> = {
+  productId: 80,
+  fullName: 120,
+  cpf: 14,
+  email: 160,
+  whatsapp: 20,
+  cep: 10,
+  street: 160,
+  number: 20,
+  complement: 120,
+  neighborhood: 120,
+  city: 120,
+  state: 2,
+};
+
+/** Devolve o nome do primeiro campo que estourou o teto, ou null. */
+function firstOversizedField(fields: Record<string, string>): string | null {
+  for (const [name, value] of Object.entries(fields)) {
+    const max = MAX_LENGTH[name];
+    if (max !== undefined && value.length > max) return name;
+  }
+  return null;
+}
+
+/**
  * Valida e normaliza o payload recebido do frontend.
  * IMPORTANTE: qualquer campo de preço/valor no corpo é ignorado — só usamos
  * productId, customer e address. O valor é buscado no banco a partir do productId.
@@ -111,6 +140,25 @@ export function parseCheckoutPayload(input: unknown): ParseResult {
   const neighborhood = asString(addressRaw.neighborhood);
   const city = asString(addressRaw.city);
   const state = asString(addressRaw.state).toUpperCase();
+
+  // Teto de tamanho antes de qualquer gravação: campo gigante vira lixo no banco.
+  const oversized = firstOversizedField({
+    productId,
+    fullName,
+    cpf,
+    email,
+    whatsapp,
+    cep,
+    street,
+    number,
+    complement: complementRaw,
+    neighborhood,
+    city,
+    state,
+  });
+  if (oversized) {
+    return { ok: false, error: "Um dos campos é longo demais." };
+  }
 
   if (!isValidCep(cep)) return { ok: false, error: "CEP inválido." };
   if (!street) return { ok: false, error: "Rua obrigatória." };

@@ -32,6 +32,23 @@ Deno.serve(async (req) => {
   try {
     const supabase = createAdminClient();
 
+    // Freio de rajada: mais de 5 pedidos do mesmo e-mail em 10 minutos é loop
+    // ou abuso, não compra. Não substitui rate limit por IP — corta a inundação
+    // trivial, que hoje não tem nenhuma barreira.
+    const since = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { count: recentCount } = await supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("customer_email", customer.email)
+      .gte("created_at", since);
+
+    if ((recentCount ?? 0) >= 5) {
+      return jsonResponse(
+        { error: "Muitas tentativas seguidas. Aguarde alguns minutos e tente de novo." },
+        429,
+      );
+    }
+
     // Preço autoritativo: sempre do banco, ignorando qualquer valor do cliente.
     const { data: productRow, error: productError } = await supabase
       .from("products")
