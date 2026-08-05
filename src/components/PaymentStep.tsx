@@ -7,7 +7,7 @@ import { formatBRL } from "../lib/money";
 
 // Validade do Pix exibida no contador. Manter em sincronia com
 // PIX_EXPIRATION_MINUTES do process-payment (o MP cancela no servidor).
-const PIX_TTL_SECONDS = 10 * 60;
+const PIX_TTL_SECONDS = 30 * 60;
 
 function formatCountdown(totalSeconds: number): string {
   const m = Math.floor(totalSeconds / 60);
