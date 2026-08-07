@@ -33,8 +33,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-line-soft pt-6 text-xs leading-relaxed">
-          <p>Razão Social Placeholder LTDA · CNPJ 00.000.000/0001-00</p>
-          <p className="mt-1">
+          <p>
             © {new Date().getFullYear()} Todos os direitos reservados. Preços e condições
             exclusivos para compras neste site.
           </p>
