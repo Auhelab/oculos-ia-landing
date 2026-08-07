@@ -18,7 +18,7 @@ const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 // Mercado Pago aceita a criação (HTTP 201, status pending) e cancela a cobrança
 // 3-4 segundos depois com status_detail "expired" — o cliente recebe um QR que
 // o banco recusa. De 8 minutos em diante a cobrança se mantém pending.
-const PIX_EXPIRATION_MINUTES = 30;
+const PIX_EXPIRATION_MINUTES = 10;
 
 interface ProcessPaymentBody {
   orderId?: unknown;

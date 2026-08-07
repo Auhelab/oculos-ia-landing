@@ -50,7 +50,16 @@ export default function Offer() {
         >
           {product.stockLeft !== null && (
             <p className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-sm font-semibold text-amber-700">
-              <span aria-hidden="true">⚡</span>
+              {/* Raio sólido: no tamanho do texto do selo, o preenchimento lê
+                  melhor que contorno e herda o âmbar do próprio selo. */}
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="h-4 w-4 shrink-0"
+                aria-hidden="true"
+              >
+                <path d="M13 2 3 14h8l-1 8 11-12h-8l1-8z" />
+              </svg>
               Restam apenas {product.stockLeft} unidades
             </p>
           )}
