@@ -24,9 +24,9 @@ const testimonials: Testimonial[] = [
     name: "Camila R.",
     location: "Curitiba, PR",
     rating: 5,
-    photo: "/images/reviews/review-c1.jpg",
+    photo: "/images/reviews/review-cliente-1.webp",
     photoAlt:
-      "Óculos inteligente preto segurado na mão sobre uma manta colorida, foto de uma cliente",
+      "Óculos inteligente preto segurado na mão, com a armação e as lentes escuras em destaque, foto de uma cliente",
   },
   {
     quote:
@@ -43,9 +43,9 @@ const testimonials: Testimonial[] = [
     name: "Bianca F.",
     location: "Rio de Janeiro, RJ",
     rating: 5,
-    photo: "/images/reviews/review-c3.jpg",
+    photo: "/images/reviews/review-cliente-3.webp",
     photoAlt:
-      "Óculos inteligente ao lado da caixa preta sobre a mesa, foto de uma cliente",
+      "Óculos inteligente apoiado na caixa do produto com a lente extra ao lado, foto de uma cliente",
   },
   {
     quote:
@@ -62,9 +62,9 @@ const testimonials: Testimonial[] = [
     name: "Diego S.",
     location: "Porto Alegre, RS",
     rating: 4,
-    photo: "/images/reviews/review-c4.jpg",
+    photo: "/images/reviews/review-cliente-5.webp",
     photoAlt:
-      "Óculos inteligente dentro da caixa aberta, com o papel de proteção, foto de um cliente",
+      "Óculos inteligente aberto sobre uma superfície clara, visto de cima, foto de um cliente",
   },
   {
     quote:
