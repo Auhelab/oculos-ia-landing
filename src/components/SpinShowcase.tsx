@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 
 /**
  * Scroll-scrub cinematográfico (método Apple/Starlink): uma sequência real de
- * 120 frames extraídos do vídeo de estúdio do produto — um ARCO de três quartos
+ * 60 frames extraídos do vídeo de estúdio do produto — um ARCO de três quartos
  * à direita → frente → três quartos à esquerda — é desenhada num <canvas>, e o
  * índice do frame é dirigido pela posição do scroll — mapeamento LINEAR, então a
  * velocidade da rotação é constante ao longo de todo o trajeto.
@@ -10,25 +10,29 @@ import { useEffect, useRef, useState } from "react";
  * Estrutura: a seção é alta (460vh) e o palco fica sticky ocupando a viewport.
  * O progresso do scroll (0→1) mistura GIRO + APROXIMAÇÃO + FOCO + FADE em 3 trechos:
  *  - 0.00–0.10  ENTRADA: materializa — desfoca→nítido + fade-in + escala 0.84→1
- *  - 0.10–0.82  GIRO: frames 0→119 (arco) com push-in contínuo (escala 1→1.2),
- *               legendas Tradução/Câmera/Música alternando de lado
+ *  - 0.10–0.82  GIRO: frames 0→59 (arco), legendas Tradução/Câmera/Música
+ *               alternando de lado
  *  - 0.82–1.00  PARADA: o produto congela no último frame, nítido e inteiro;
  *               o CTA entra por baixo dele
  *
- * Frames pré-carregados (~2.3 MB no total). Fallback estático sem JS /
+ * Frames pré-carregados (~720 KB no total), e só quando a seção se aproxima —
+ * a primeira tela não disputa banda com eles. Fallback estático sem JS /
  * reduced-motion. Só transform/opacity/filter + draw no canvas (60fps).
  */
 
-const FRAME_COUNT = 120;
+const FRAME_COUNT = 60;
 const FRAME_SRC = Array.from(
   { length: FRAME_COUNT },
   (_, i) => `/images/spin/${String(i).padStart(3, "0")}.webp`,
 );
-// Resolução nativa do vídeo de origem. Não reduzir: a animação amplia até 2.2x
-// num palco de até 960px, então em tela retina o frame já é esticado — cortar
-// resolução aqui aparece como borrão no mergulho final.
-const FRAME_W = 1280;
-const FRAME_H = 720;
+// Largura do palco (min(92vw, 60rem) = no máximo 960px), que é onde o canvas é
+// desenhado — não há mais push-in, o produto fica em escala 1 o tempo todo.
+// Casar o frame com essa largura derruba o peso da sequência de 2.3 MB para
+// 720 KB. Em monitor retina grande o canvas ainda pede o dobro disso, então o
+// produto fica um pouco menos definido ali; no celular, onde o palco tem uns
+// 360px, sobra resolução.
+const FRAME_W = 960;
+const FRAME_H = 540;
 
 // Tamanho ÚNICO do produto durante toda a seção. 1 = o palco inteiro
 // (min(92vw, 60rem)). Subir daqui aumenta a presença, mas em tela de notebook
@@ -256,23 +260,47 @@ export default function SpinShowcase() {
     );
     io.observe(section);
 
-    // Pré-carrega os frames; desenha o primeiro assim que chega
-    FRAME_SRC.forEach((src, i) => {
-      const img = new Image();
-      img.decoding = "async";
-      img.onload = () => {
-        loaded++;
-        if (i === 0) {
-          resize();
-          targetP = renderP = readTarget();
-          render(renderP);
-          lastRP = renderP;
-        }
-        if (loaded === FRAME_COUNT && !running) render(renderP);
-      };
-      img.src = src;
-      images[i] = img;
-    });
+    // Pré-carrega os frames; desenha o primeiro assim que chega. Só dispara
+    // quando a seção chega a uma tela e meia de distância: assim os 60 pedidos
+    // não competem com o herói no primeiro carregamento, que é o que pesa em
+    // celular modesto. Uma tela e meia dá folga de sobra para o primeiro frame
+    // chegar antes de a seção aparecer.
+    let framesPedidos = false;
+    const carregarFrames = () => {
+      if (framesPedidos) return;
+      framesPedidos = true;
+      FRAME_SRC.forEach((src, i) => {
+        const img = new Image();
+        img.decoding = "async";
+        img.onload = () => {
+          loaded++;
+          if (i === 0) {
+            resize();
+            targetP = renderP = readTarget();
+            render(renderP);
+            lastRP = renderP;
+          }
+          if (loaded === FRAME_COUNT && !running) render(renderP);
+        };
+        img.src = src;
+        images[i] = img;
+      });
+    };
+
+    const ioPreload = new IntersectionObserver(
+      (entries) => {
+        if (!entries[0].isIntersecting) return;
+        ioPreload.disconnect();
+        carregarFrames();
+      },
+      { rootMargin: "150% 0px" },
+    );
+    ioPreload.observe(section);
+
+    // Rede de segurança: se o IntersectionObserver não entregar nada (acontece
+    // em navegadores embutidos e webviews), os frames entram mesmo assim depois
+    // que a primeira tela já pintou. Sem isso o palco fica em branco para sempre.
+    const destravar = window.setTimeout(carregarFrames, 3000);
 
     resize();
     const onResize = () => {
@@ -284,6 +312,8 @@ export default function SpinShowcase() {
     window.addEventListener("resize", onResize, { passive: true });
     return () => {
       io.disconnect();
+      ioPreload.disconnect();
+      clearTimeout(destravar);
       running = false;
       if (rafId) cancelAnimationFrame(rafId);
       window.removeEventListener("resize", onResize);
