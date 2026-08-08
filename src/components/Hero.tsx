@@ -15,7 +15,7 @@ export default function Hero() {
         </p>
 
         <h1
-          className="animate-fade-up mt-4 max-w-3xl text-[2.75rem] font-bold leading-[1.05] tracking-[0.01em] sm:text-6xl lg:text-7xl"
+          className="animate-fade-up mt-4 max-w-3xl font-display text-[2.75rem] font-bold leading-[1.05] tracking-[-0.02em] sm:text-6xl lg:text-7xl"
           style={{ animationDelay: "100ms" }}
         >
           {product.name}

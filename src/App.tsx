@@ -3,6 +3,7 @@ import Lenis from "lenis";
 import Nav from "./components/Nav";
 import Hero from "./components/Hero";
 import SpinShowcase from "./components/SpinShowcase";
+import ScrollHeroDemo from "./components/ScrollHeroDemo";
 import Stats from "./components/Stats";
 import Benefits from "./components/Benefits";
 import SocialProof from "./components/SocialProof";
@@ -66,6 +67,8 @@ export default function App() {
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
     lenisRef.current = lenis;
+    // Exposto para depuração/QA (posicionar o scroll programaticamente).
+    (window as unknown as { __lenis?: Lenis }).__lenis = lenis;
 
     let rafId = requestAnimationFrame(function raf(time) {
       lenis.raf(time);
@@ -142,6 +145,16 @@ export default function App() {
   if (route === "#/obrigado") return <ThankYou />;
   if (route.startsWith("#/rastreio")) return <TrackOrder />;
   if (route.startsWith("#/admin")) return <AdminDashboard />;
+  // Protótipo do scroll cinematográfico sem giro 360° (avaliação interna).
+  if (route.startsWith("#/demo"))
+    return (
+      <>
+        <Nav />
+        <main className="pt-14">
+          <ScrollHeroDemo />
+        </main>
+      </>
+    );
 
   return (
     <>

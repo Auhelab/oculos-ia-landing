@@ -229,7 +229,7 @@ export default function PaymentStep({
             aria-hidden="true"
             className="h-4 w-4 animate-spin rounded-full border-2 border-line border-t-ink"
           />
-          Aguardando o pagamento — esta tela avança sozinha.
+          Aguardando o pagamento. Esta tela avança sozinha.
         </p>
         <p className="mt-2 text-sm text-ink-soft">
           O código expira em{" "}
@@ -346,7 +346,7 @@ function BrickLoading({ slow }: { slow: boolean }) {
         <p className="text-sm font-medium text-ink">Carregando formas de pagamento…</p>
         <p className="mt-1.5 text-xs text-ink-soft">
           {slow
-            ? "A conexão com o Mercado Pago está um pouco lenta. Já está quase lá — não feche a página."
+            ? "A conexão com o Mercado Pago está um pouco lenta. Já está quase lá, não feche a página."
             : "Cartão, Pix e mais aparecem em instantes."}
         </p>
       </div>

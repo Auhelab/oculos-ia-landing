@@ -59,7 +59,9 @@ const benefits: Benefit[] = [
       "Troque as lentes em segundos: proteção UV400 para sol, tela e uso diário, com armação leve e confortável.",
     icon: (
       <svg {...iconProps}>
-        <path d="M2 10h20M4 10l1.5 5.5A3 3 0 0 0 8.4 18h1.2a3 3 0 0 0 2.9-2.5L13 10M13 10l.5 5.5a3 3 0 0 0 3 2.5h1.1a3 3 0 0 0 2.9-2.5L22 10" />
+        <rect x="2.5" y="8.5" width="8.5" height="7" rx="2.4" />
+        <rect x="13" y="8.5" width="8.5" height="7" rx="2.4" />
+        <path d="M11 11.4h2" />
       </svg>
     ),
   },

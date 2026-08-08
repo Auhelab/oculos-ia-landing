@@ -1,3 +1,4 @@
+import { useCallback, useEffect, useRef, useState } from "react";
 import Dot from "./Dot";
 
 interface Testimonial {
@@ -24,7 +25,8 @@ const testimonials: Testimonial[] = [
     location: "Curitiba, PR",
     rating: 5,
     photo: "/images/reviews/review-c1.jpg",
-    photoAlt: "Óculos inteligente preto segurado na mão, mostrando o tamanho da armação, foto enviada por uma cliente",
+    photoAlt:
+      "Óculos inteligente preto segurado na mão sobre uma manta colorida, foto de uma cliente",
   },
   {
     quote:
@@ -32,7 +34,7 @@ const testimonials: Testimonial[] = [
     name: "Anderson P.",
     location: "São Paulo, SP",
     rating: 5,
-    photo: "/images/reviews/review-c2.jpg",
+    photo: "/images/reviews/review-cliente-2.webp",
     photoAlt: "Óculos ao lado da caixa e da bolsinha de guardar, com as lentes extras, foto de um cliente",
   },
   {
@@ -41,8 +43,9 @@ const testimonials: Testimonial[] = [
     name: "Bianca F.",
     location: "Rio de Janeiro, RJ",
     rating: 5,
-    photo: "/images/reviews/review-5.webp",
-    photoAlt: "Óculos inteligente preto ao lado da caixa do produto, foto de uma cliente",
+    photo: "/images/reviews/review-c3.jpg",
+    photoAlt:
+      "Óculos inteligente ao lado da caixa preta sobre a mesa, foto de uma cliente",
   },
   {
     quote:
@@ -50,7 +53,7 @@ const testimonials: Testimonial[] = [
     name: "Rogério M.",
     location: "Belo Horizonte, MG",
     rating: 5,
-    photo: "/images/reviews/review-c3.jpg",
+    photo: "/images/reviews/review-cliente-4.webp",
     photoAlt: "Óculos inteligente na mão com a câmera visível na armação e a caixa ao fundo, foto de um cliente",
   },
   {
@@ -60,7 +63,8 @@ const testimonials: Testimonial[] = [
     location: "Porto Alegre, RS",
     rating: 4,
     photo: "/images/reviews/review-c4.jpg",
-    photoAlt: "Óculos inteligente preto apoiado sobre a caixa aberta do produto, foto de um cliente",
+    photoAlt:
+      "Óculos inteligente dentro da caixa aberta, com o papel de proteção, foto de um cliente",
   },
   {
     quote:
@@ -68,7 +72,7 @@ const testimonials: Testimonial[] = [
     name: "Patrícia L.",
     location: "Fortaleza, CE",
     rating: 5,
-    photo: "/images/reviews/review-c5.jpg",
+    photo: "/images/reviews/review-cliente-6.webp",
     photoAlt: "Óculos inteligente sobre a caixa do produto, com os ícones de câmera, tradução em tempo real e assistente de voz, foto de uma cliente",
   },
 ];
@@ -95,7 +99,89 @@ function Stars({ rating }: { rating: number }) {
   );
 }
 
+/** Foto ampliada sobre a tela. Fecha no Esc, no clique fora e no botão. */
+function PhotoLightbox({
+  photo,
+  alt,
+  onClose,
+}: {
+  photo: string;
+  alt: string;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    // Trava a rolagem do fundo enquanto a foto está aberta.
+    const antes = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = antes;
+    };
+  }, [onClose]);
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Foto da avaliação"
+      onClick={onClose}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-6"
+    >
+      <button
+        type="button"
+        onClick={onClose}
+        aria-label="Fechar"
+        className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full bg-white/15 text-2xl leading-none text-white transition hover:bg-white/25"
+      >
+        ×
+      </button>
+      <img
+        src={photo}
+        alt={alt}
+        onClick={(e) => e.stopPropagation()}
+        className="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"
+      />
+    </div>
+  );
+}
+
 export default function SocialProof() {
+  const trilhoRef = useRef<HTMLUListElement>(null);
+  const [ampliada, setAmpliada] = useState<{ photo: string; alt: string } | null>(null);
+  const [posicao, setPosicao] = useState(0);
+  const [extremos, setExtremos] = useState({ inicio: true, fim: false });
+
+  // Mede em qual card o trilho parou e se chegou às pontas (para as setas).
+  const medir = useCallback(() => {
+    const el = trilhoRef.current;
+    if (!el) return;
+    const card = el.firstElementChild as HTMLElement | null;
+    const passo = card ? card.getBoundingClientRect().width + 20 : 1;
+    setPosicao(Math.round(el.scrollLeft / passo));
+    setExtremos({
+      inicio: el.scrollLeft < 8,
+      fim: el.scrollLeft + el.clientWidth >= el.scrollWidth - 8,
+    });
+  }, []);
+
+  useEffect(() => {
+    medir();
+    window.addEventListener("resize", medir);
+    return () => window.removeEventListener("resize", medir);
+  }, [medir]);
+
+  const irPara = (dir: -1 | 1) => {
+    const el = trilhoRef.current;
+    if (!el) return;
+    const card = el.firstElementChild as HTMLElement | null;
+    const passo = card ? card.getBoundingClientRect().width + 20 : el.clientWidth;
+    el.scrollBy({ left: dir * passo, behavior: "smooth" });
+  };
+
   return (
     <section id="avaliacoes" className="bg-haze py-24 sm:py-32">
       <div className="mx-auto max-w-page px-6">
@@ -138,26 +224,44 @@ export default function SocialProof() {
           </div>
         </div>
 
-        <ul className="mt-12 grid items-start gap-5 md:grid-cols-3">
-          {testimonials.map((t, index) => (
+        {/* Trilho horizontal: arrasta no dedo, anda de card em card nas setas.
+            O scroll nativo com snap faz o trabalho — sem biblioteca. */}
+        {/* O data-reveal fica no TRILHO, não em cada card: dentro de um
+            contêiner com overflow-x os cards fora da janela nunca alcançam os
+            15% de visibilidade que o observador exige e ficariam invisíveis
+            para sempre. */}
+        <ul
+          ref={trilhoRef}
+          onScroll={medir}
+          data-reveal
+          className="mt-12 flex snap-x snap-mandatory items-start gap-5 overflow-x-auto pb-2 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {testimonials.map((t) => (
             <li
               key={t.name}
-              data-reveal
-              style={{ transitionDelay: `${index * 80}ms` }}
-              className="flex flex-col overflow-hidden rounded-3xl bg-white shadow-[0_2px_16px_rgba(0,0,0,0.04)]"
+              className="flex w-[85%] shrink-0 snap-start flex-col overflow-hidden rounded-3xl bg-white shadow-[0_2px_16px_rgba(0,0,0,0.04)] sm:w-[48%] lg:w-[32%]"
             >
               {t.photo && (
-                <div className="relative aspect-[16/9] w-full overflow-hidden bg-haze">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setAmpliada({ photo: t.photo!, alt: t.photoAlt ?? "" })
+                  }
+                  aria-label="Ampliar a foto desta avaliação"
+                  // 3/4 é a proporção nativa das fotos: assim elas aparecem
+                  // inteiras, sem corte e sem tarja nas laterais.
+                  className="group relative aspect-[3/4] w-full overflow-hidden bg-haze"
+                >
                   <img
                     src={t.photo}
                     alt={t.photoAlt ?? ""}
                     loading="lazy"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover transition duration-300 group-hover:scale-[1.03]"
                   />
-                  <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white backdrop-blur-sm">
+                  <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2.5 py-1 text-[11px] font-medium text-white">
                     {t.photoCaption ?? "Foto do cliente"}
                   </span>
-                </div>
+                </button>
               )}
               <div className="flex flex-1 flex-col p-8">
                 <Stars rating={t.rating} />
@@ -172,7 +276,55 @@ export default function SocialProof() {
             </li>
           ))}
         </ul>
+
+        {/* Controles do trilho. As setas somem nas pontas; os pontos dizem
+            onde o visitante está. No celular o gesto de arrastar já basta. */}
+        <div className="mt-6 flex items-center justify-between gap-4">
+          <div className="flex gap-1.5" aria-hidden="true">
+            {testimonials.map((t, i) => (
+              <span
+                key={t.name}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === posicao ? "w-6 bg-ink" : "w-1.5 bg-line"
+                }`}
+              />
+            ))}
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => irPara(-1)}
+              disabled={extremos.inicio}
+              aria-label="Avaliação anterior"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink transition hover:bg-haze disabled:opacity-35"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+                <path d="M15 5l-7 7 7 7" />
+              </svg>
+            </button>
+            <button
+              type="button"
+              onClick={() => irPara(1)}
+              disabled={extremos.fim}
+              aria-label="Próxima avaliação"
+              className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-white text-ink transition hover:bg-haze disabled:opacity-35"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5" aria-hidden="true">
+                <path d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          </div>
+        </div>
       </div>
+
+      {ampliada && (
+        <PhotoLightbox
+          photo={ampliada.photo}
+          alt={ampliada.alt}
+          onClose={() => setAmpliada(null)}
+        />
+      )}
     </section>
   );
 }

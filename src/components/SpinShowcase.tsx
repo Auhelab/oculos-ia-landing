@@ -2,19 +2,20 @@ import { useEffect, useRef, useState } from "react";
 
 /**
  * Scroll-scrub cinematográfico (método Apple/Starlink): uma sequência real de
- * 120 frames do produto num GIRO 360° COMPLETO (vídeo gerado a partir das fotos
- * reais de estúdio — frente→perfil→traseira→perfil→frente) é desenhada num
- * <canvas>, e o índice do frame é dirigido pela posição do scroll — mapeamento
- * LINEAR, então a velocidade de rotação é constante ao longo de toda a volta.
+ * 120 frames extraídos do vídeo de estúdio do produto — um ARCO de três quartos
+ * à direita → frente → três quartos à esquerda — é desenhada num <canvas>, e o
+ * índice do frame é dirigido pela posição do scroll — mapeamento LINEAR, então a
+ * velocidade da rotação é constante ao longo de todo o trajeto.
  *
  * Estrutura: a seção é alta (460vh) e o palco fica sticky ocupando a viewport.
  * O progresso do scroll (0→1) mistura GIRO + APROXIMAÇÃO + FOCO + FADE em 3 trechos:
  *  - 0.00–0.10  ENTRADA: materializa — desfoca→nítido + fade-in + escala 0.84→1
- *  - 0.10–0.82  GIRO: frames 0→119 (360°) com push-in contínuo (escala 1→1.2),
+ *  - 0.10–0.82  GIRO: frames 0→119 (arco) com push-in contínuo (escala 1→1.2),
  *               legendas Tradução/Câmera/Música alternando de lado
- *  - 0.82–1.00  MERGULHO: escala 1.2→~2.2 + desfoque + fade-out, revela o CTA
+ *  - 0.82–1.00  PARADA: o produto congela no último frame, nítido e inteiro;
+ *               o CTA entra por baixo dele
  *
- * Frames pré-carregados (~1.3 MB no total). Fallback estático sem JS /
+ * Frames pré-carregados (~2.3 MB no total). Fallback estático sem JS /
  * reduced-motion. Só transform/opacity/filter + draw no canvas (60fps).
  */
 
@@ -23,8 +24,16 @@ const FRAME_SRC = Array.from(
   { length: FRAME_COUNT },
   (_, i) => `/images/spin/${String(i).padStart(3, "0")}.webp`,
 );
-const FRAME_W = 880;
-const FRAME_H = 564;
+// Resolução nativa do vídeo de origem. Não reduzir: a animação amplia até 2.2x
+// num palco de até 960px, então em tela retina o frame já é esticado — cortar
+// resolução aqui aparece como borrão no mergulho final.
+const FRAME_W = 1280;
+const FRAME_H = 720;
+
+// Tamanho ÚNICO do produto durante toda a seção. 1 = o palco inteiro
+// (min(92vw, 60rem)). Subir daqui aumenta a presença, mas em tela de notebook
+// (~650px de altura) o canvas passa a ocupar a tela toda e o topo é cortado.
+const PRODUCT_SCALE = 1;
 
 const ROT_START = 0.1;
 const ROT_END = 0.82;
@@ -121,11 +130,18 @@ export default function SpinShowcase() {
       ctx.drawImage(img, 0, 0, cssW, cssH);
     };
 
-    // Progresso cru (0→1) do scroll dentro do trilho pinado
+    // Progresso cru (0→1) do scroll dentro do trilho pinado.
+    //
+    // O trilho começa ANTES de a seção grudar no topo: enquanto ela sobe a
+    // tela, já contamos progresso. Sem isso o visitante rola o Hero inteiro
+    // (uma tela cheia) com a animação parada, e ela só arranca no segundo
+    // fôlego de rolagem. LEAD é quanto dessa aproximação entra no trilho.
+    const LEAD_RATIO = 0.7;
     const readTarget = () => {
-      const total = section.offsetHeight - window.innerHeight;
+      const lead = window.innerHeight * LEAD_RATIO;
+      const total = section.offsetHeight - window.innerHeight + lead;
       const rect = section.getBoundingClientRect();
-      return total > 0 ? clamp01(-rect.top / total) : 0;
+      return total > 0 ? clamp01((lead - rect.top) / total) : 0;
     };
 
     // Desenha um estado de progresso JÁ suavizado (p = renderP, não o scroll cru)
@@ -138,28 +154,34 @@ export default function SpinShowcase() {
       // Mistura giro + aproximação + foco + fade, encadeados em 3 trechos:
       //  entrada  → materializa (blur↓ + opacity↑ + escala↑)
       //  miolo    → GIRA com push-in contínuo (aproximação lenta)
-      //  saída    → mergulho (escala↑↑) + desfoca + some, revelando o CTA
-      let scale: number;
+      //  saída    → para no último frame, nítido, e o CTA entra por baixo
+      // O produto tem UM tamanho só, do começo ao fim: nada de push-in durante
+      // o giro nem de encolher no final. O único movimento além da rotação é a
+      // subida no trecho final, que abre espaço para o título e o botão.
+      const scale = PRODUCT_SCALE;
       let blur: number;
       let fade: number;
+      let liftPct = 0; // deslocamento vertical, em % da altura do canvas
       if (p < ROT_START) {
         const pe = clamp01(p / ROT_START);
         fade = pe;
-        blur = (1 - pe) * 12;
-        scale = 0.84 + pe * 0.16; // 0.84 → 1.0
+        blur = (1 - pe) * 12; // materializa por foco, não por tamanho
       } else if (p <= ROT_END) {
-        const pr = clamp01((p - ROT_START) / (ROT_END - ROT_START));
         fade = 1;
         blur = 0;
-        scale = 1 + pr * 0.2; // push-in 1.0 → 1.2 durante o giro
       } else {
+        // Depois do giro o produto PARA no último frame e fica lá: sem
+        // desfoque, sem sumir, do mesmo tamanho. Só sobe para liberar a faixa
+        // de baixo — sem isso o canvas ocupa a tela quase inteira e o CTA cai
+        // por cima dele em telas de notebook.
         const pd = clamp01((p - ROT_END) / (1 - ROT_END));
-        scale = 1.2 + pd * pd * 1.0; // mergulho 1.2 → ~2.2
-        blur = pd * 8;
-        fade = 1 - clamp01((pd - 0.55) / 0.45);
+        const ease = clamp01(pd / 0.35); // acomoda no início do trecho e para
+        fade = 1;
+        blur = 0;
+        liftPct = -16 * ease;
       }
       canvas.style.opacity = String(fade);
-      canvas.style.transform = `scale(${scale.toFixed(3)})`;
+      canvas.style.transform = `translateY(${liftPct.toFixed(2)}%) scale(${scale.toFixed(3)})`;
       canvas.style.filter = blur > 0.05 ? `blur(${blur.toFixed(1)}px)` : "none";
 
       // Palavras gigantes + legendas por janela (só durante a rotação)
@@ -274,7 +296,8 @@ export default function SpinShowcase() {
       <section aria-label="Destaques do produto" className="py-24">
         <div className="mx-auto max-w-page px-6">
           <img
-            src={FRAME_SRC[0]}
+            // Frame do meio: é onde o produto aparece exatamente de frente.
+            src={FRAME_SRC[Math.floor(FRAME_COUNT / 2)]}
             alt="Óculos inteligentes pretos com câmera integrada na armação"
             width={FRAME_W}
             height={FRAME_H}
@@ -316,7 +339,16 @@ export default function SpinShowcase() {
               ref={(el) => {
                 capRefs.current[i] = el;
               }}
-              className="rounded-3xl text-center will-change-[opacity,transform] md:bg-white/70 md:p-7 md:text-left md:backdrop-blur-xl"
+              // No desktop a legenda fica POR CIMA do produto. Um painel opaco
+              // de cantos retos corta a foto numa linha visível — por isso o
+              // fundo é um degradê que morre em transparente na direção do
+              // produto, dissolvendo a borda em vez de recortá-la. Sem
+              // backdrop-blur pelo mesmo motivo: ele desenha o retângulo.
+              className={`rounded-3xl text-center will-change-[opacity,transform] md:p-7 md:text-left ${
+                beat.side === "left"
+                  ? "md:bg-gradient-to-r md:from-white md:via-white/85 md:to-transparent"
+                  : "md:bg-gradient-to-l md:from-white md:via-white/85 md:to-transparent"
+              }`}
               style={{ opacity: 0 }}
             >
               <p className="eyebrow">{beat.eyebrow}</p>

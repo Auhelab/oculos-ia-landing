@@ -123,7 +123,7 @@ export async function sendShippedEmailOnce(
   const order = data as OrderRow;
   const ok = await sendEmail({
     to: order.customer_email,
-    subject: `Seu pedido ${orderLabel(order)} foi enviado 📦`,
+    subject: `Seu pedido ${orderLabel(order)} foi enviado`,
     html: shippedEmailHtml(order),
   });
 
@@ -168,7 +168,7 @@ function paidEmailHtml(o: OrderRow): string {
     </p>
     ${ctaButton("Acompanhar meu pedido", trackUrl(orderRef(o)))}
   `;
-  return emailLayout({ title: "Pagamento aprovado! 🎉", body });
+  return emailLayout({ title: "Pagamento aprovado!", body });
 }
 
 function shippedEmailHtml(o: OrderRow): string {
@@ -190,5 +190,5 @@ function shippedEmailHtml(o: OrderRow): string {
       O código pode levar algumas horas para aparecer no site do transportador.
     </p>
   `;
-  return emailLayout({ title: "Seu pedido está a caminho 📦", body });
+  return emailLayout({ title: "Seu pedido está a caminho", body });
 }

@@ -82,21 +82,21 @@ function OrderCard({
         </div>
         <div>
           <div className="text-xs uppercase tracking-wide text-white/40">Método</div>
-          <div className="text-white/80">{order.payment_method ?? "—"}</div>
+          <div className="text-white/80">{order.payment_method ?? "sem registro"}</div>
         </div>
         <div className="col-span-2">
           <div className="text-xs uppercase tracking-wide text-white/40">Entrega</div>
           <div className="text-white/80">
             {order.address_street}, {order.address_number}
-            {order.address_complement ? ` (${order.address_complement})` : ""} —{" "}
-            {order.address_neighborhood}, {order.address_city}/{order.address_state} — CEP{" "}
+            {order.address_complement ? ` (${order.address_complement})` : ""},{" "}
+            {order.address_neighborhood}, {order.address_city}/{order.address_state}, CEP{" "}
             {order.address_cep}
           </div>
         </div>
         <div className="col-span-2">
           <div className="text-xs uppercase tracking-wide text-white/40">Pedido</div>
           <div className="font-mono text-sm font-semibold text-white/80">
-            {order.order_number != null ? `#${order.order_number}` : "—"}
+            {order.order_number != null ? `#${order.order_number}` : "sem número"}
           </div>
           <div className="font-mono text-[11px] text-white/40">{order.id}</div>
           <div className="text-xs text-white/45">Criado em {formatDateTime(order.created_at)}</div>

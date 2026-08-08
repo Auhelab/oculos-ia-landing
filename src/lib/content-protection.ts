@@ -81,7 +81,7 @@ export function useContentProtection(opcoes: OpcoesProtecao = {}): void {
       e.preventDefault();
       e.clipboardData?.setData(
         "text/plain",
-        `Conteúdo protegido por direitos autorais — ${window.location.origin}`,
+        `Conteúdo protegido por direitos autorais. ${window.location.origin}`,
       );
     };
 

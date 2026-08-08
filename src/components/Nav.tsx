@@ -15,8 +15,17 @@ export default function Nav() {
         aria-label="Principal"
         className="mx-auto flex h-14 max-w-page items-center justify-between px-6"
       >
-        <a href="#/" className="text-[15px] font-semibold tracking-tight">
-          {product.name}
+        <a href="#/" className="flex items-center">
+          {/* Símbolo "ab" da Auhelab (arte original, PNG com transparência).
+              Exportado a 96px de altura = 4x o tamanho exibido, para ficar
+              nítido em tela retina. */}
+          <img
+            src="/images/logo-ab.png"
+            alt={product.name}
+            width={134}
+            height={96}
+            className="h-6 w-auto"
+          />
         </a>
 
         <ul className="hidden items-center gap-8 md:flex">

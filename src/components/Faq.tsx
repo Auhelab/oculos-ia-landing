@@ -9,7 +9,7 @@ const faqItems: FaqItem[] = [
   {
     question: "Qual o prazo de entrega?",
     answer:
-      "O prazo de entrega é de 15 a 40 dias úteis, dependendo da sua região. Assim que o pedido for postado, você recebe o código de rastreio por e-mail e WhatsApp para acompanhar cada etapa.",
+      "O prazo de entrega é de 15 a 40 dias úteis, dependendo da sua região. Assim que o pedido for postado, você recebe o código de rastreio por e-mail para acompanhar cada etapa.",
   },
   {
     question: "Posso trocar ou devolver o produto?",
@@ -29,7 +29,7 @@ const faqItems: FaqItem[] = [
   {
     question: "Como acompanho o meu pedido?",
     answer:
-      "Depois da postagem, enviamos o código de rastreio por e-mail e WhatsApp. Com ele, você acompanha a viagem do produto até a sua casa em tempo real.",
+      "Depois da postagem, enviamos o código de rastreio por e-mail. Com ele, você acompanha a viagem do produto até a sua casa em tempo real.",
   },
 ];
 

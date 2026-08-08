@@ -81,7 +81,7 @@ function Timeline({ status }: { status: string }) {
                   : "border-line bg-haze text-ink-soft/50"
               }`}
             >
-              {done ? "✓" : i + 1}
+              {done ? "OK" : i + 1}
             </span>
             <span
               className={`text-sm font-medium ${
