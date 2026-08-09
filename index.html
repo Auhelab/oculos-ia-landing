@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#ffffff" />
     <meta
       name="description"
-      content="Óculos Inteligentes com IA — câmera HD 8MP, tradução por IA em tempo real, música e chamadas Bluetooth. Frete grátis para todo o Brasil e parcelamento em até 12x."
+      content="Óculos inteligentes com IA: câmera HD 8MP, tradução em tempo real, música e chamadas por Bluetooth. Frete grátis para todo o Brasil e parcelamento em até 6x sem juros."
     />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/favicon-512.png" />
@@ -31,6 +31,71 @@
       rel="stylesheet"
     />
     <title>Smart Glasses | Câmera, tradução e música</title>
+
+    <!--
+      Dados estruturados (schema.org em JSON-LD). É o que faz o Google entender
+      que a página é UM PRODUTO à venda, com preço e disponibilidade, em vez de
+      um texto qualquer — e o que habilita o preço aparecer direto no resultado
+      da busca. O preço aqui é só a vitrine: quem cobra é o backend.
+
+      Sem `aggregateRating` de propósito. Nota e número de avaliações em JSON-LD
+      viram estrela no resultado do Google, e ele exige que sejam avaliações do
+      SEU site, coletadas por você. As da seção de avaliações vieram do anúncio
+      de origem — declará-las aqui é o tipo de coisa que rende punição manual.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "Organization",
+            "@id": "https://auhelab.com.br/#loja",
+            "name": "Auhelab",
+            "url": "https://auhelab.com.br/",
+            "logo": "https://auhelab.com.br/favicon-512.png"
+          },
+          {
+            "@type": "WebSite",
+            "@id": "https://auhelab.com.br/#site",
+            "url": "https://auhelab.com.br/",
+            "name": "Smart Glasses",
+            "inLanguage": "pt-BR",
+            "publisher": { "@id": "https://auhelab.com.br/#loja" }
+          },
+          {
+            "@type": "Product",
+            "@id": "https://auhelab.com.br/#produto",
+            "name": "Smart Glasses",
+            "sku": "oculos-inteligentes-ia-2026",
+            "description": "Óculos inteligentes com câmera HD 8MP, tradução por IA em tempo real, música e chamadas por Bluetooth. Acompanha três jogos de lentes.",
+            "image": ["https://auhelab.com.br/images/product-hero.jpg"],
+            "brand": { "@type": "Brand", "name": "Auhelab" },
+            "offers": {
+              "@type": "Offer",
+              "url": "https://auhelab.com.br/#checkout",
+              "priceCurrency": "BRL",
+              "price": "397.00",
+              "priceValidUntil": "2027-08-08",
+              "availability": "https://schema.org/InStock",
+              "itemCondition": "https://schema.org/NewCondition",
+              "seller": { "@id": "https://auhelab.com.br/#loja" },
+              "shippingDetails": {
+                "@type": "OfferShippingDetails",
+                "shippingRate": {
+                  "@type": "MonetaryAmount",
+                  "value": "0",
+                  "currency": "BRL"
+                },
+                "shippingDestination": {
+                  "@type": "DefinedRegion",
+                  "addressCountry": "BR"
+                }
+              }
+            }
+          }
+        ]
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

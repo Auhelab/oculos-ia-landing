@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  A loja inteira vive numa única URL: o roteamento é por hash (#/termos,
+  #/privacidade, #/rastreio), e fragmento depois do # não é endereço separado
+  para o Google. Por isso o mapa tem uma entrada só. Se um dia as páginas
+  legais virarem caminhos de verdade (/termos), elas entram aqui.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://auhelab.com.br/</loc>
+    <lastmod>2026-08-08</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+</urlset>
