@@ -153,15 +153,21 @@ export default function SocialProof() {
   const trilhoRef = useRef<HTMLUListElement>(null);
   const [ampliada, setAmpliada] = useState<{ photo: string; alt: string } | null>(null);
   const [posicao, setPosicao] = useState(0);
+  const [numParadas, setNumParadas] = useState(testimonials.length);
   const [extremos, setExtremos] = useState({ inicio: true, fim: false });
 
-  // Mede em qual card o trilho parou e se chegou às pontas (para as setas).
+  // Mede em qual parada o trilho está e se chegou às pontas (para as setas).
+  // Os pontos contam PARADAS de rolagem, não cards: em tela larga cabem 3 cards
+  // por janela, então o trilho só tem 4 posições possíveis — um ponto por card
+  // prometeria duas paradas que não existem e a seta pareceria travada.
   const medir = useCallback(() => {
     const el = trilhoRef.current;
     if (!el) return;
     const card = el.firstElementChild as HTMLElement | null;
     const passo = card ? card.getBoundingClientRect().width + 20 : 1;
-    setPosicao(Math.round(el.scrollLeft / passo));
+    const paradas = Math.round((el.scrollWidth - el.clientWidth) / passo) + 1;
+    setNumParadas(paradas);
+    setPosicao(Math.min(Math.round(el.scrollLeft / passo), paradas - 1));
     setExtremos({
       inicio: el.scrollLeft < 8,
       fim: el.scrollLeft + el.clientWidth >= el.scrollWidth - 8,
@@ -281,9 +287,9 @@ export default function SocialProof() {
             onde o visitante está. No celular o gesto de arrastar já basta. */}
         <div className="mt-6 flex items-center justify-between gap-4">
           <div className="flex gap-1.5" aria-hidden="true">
-            {testimonials.map((t, i) => (
+            {Array.from({ length: numParadas }, (_, i) => (
               <span
-                key={t.name}
+                key={i}
                 className={`h-1.5 rounded-full transition-all ${
                   i === posicao ? "w-6 bg-ink" : "w-1.5 bg-line"
                 }`}
