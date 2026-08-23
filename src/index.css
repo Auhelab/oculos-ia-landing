@@ -38,6 +38,13 @@ html.lenis body {
     @apply bg-white font-sans text-ink antialiased;
   }
 
+  /* Todo título grande é Oswald, tenha ou não a classe font-display. Os pesos
+     e tamanhos continuam nas utilities de cada componente. */
+  h1,
+  h2 {
+    @apply font-display;
+  }
+
   ::selection {
     @apply bg-ink text-white;
   }
@@ -103,8 +110,11 @@ html.lenis body {
     @apply rounded-3xl border border-line-soft bg-white shadow-[0_2px_20px_rgba(0,0,0,0.04)];
   }
 
+  /* Manuscrita (Indie Flower só tem peso 400, por isso sem font-semibold).
+     O tracking cai de 0.18em pra 0.06em: caps desenhados à mão com vão largo
+     se desmancham em letras soltas. */
   .eyebrow {
-    @apply text-[13px] font-semibold uppercase tracking-[0.18em] text-ink-soft;
+    @apply font-hand text-[17px] uppercase tracking-[0.06em] text-ink-soft;
   }
 }
 

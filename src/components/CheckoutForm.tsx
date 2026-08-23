@@ -287,7 +287,7 @@ export default function CheckoutForm() {
   return (
     <section id="checkout" className="bg-haze py-24 sm:py-32">
       <div className="mx-auto max-w-page px-6">
-        <h2 className="text-3xl font-bold tracking-[-0.02em] sm:text-5xl">
+        <h2 className="text-3xl font-semibold sm:text-5xl">
           Finalize seu pedido.
         </h2>
         <p className="mt-3 max-w-2xl text-lg text-ink-soft">
