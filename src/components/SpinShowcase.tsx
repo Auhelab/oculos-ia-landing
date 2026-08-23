@@ -340,7 +340,7 @@ export default function SpinShowcase() {
             {beats.map((b) => (
               <div key={b.word}>
                 <p className="eyebrow">{b.eyebrow}</p>
-                <h3 className="mt-2 text-2xl font-bold tracking-[-0.02em]">{b.title}</h3>
+                <h3 className="mt-2 text-2xl font-bold">{b.title}</h3>
                 <p className="mt-2 text-[15px] leading-relaxed text-ink-soft">{b.text}</p>
               </div>
             ))}
@@ -383,7 +383,7 @@ export default function SpinShowcase() {
               style={{ opacity: 0 }}
             >
               <p className="eyebrow">{beat.eyebrow}</p>
-              <h3 className="mt-3 text-3xl font-bold tracking-[-0.02em] sm:text-4xl">
+              <h3 className="mt-3 text-3xl font-bold sm:text-4xl">
                 {beat.title}
               </h3>
               <p className="mx-auto mt-3 max-w-md text-[15px] leading-relaxed text-ink-soft sm:text-base md:mx-0">

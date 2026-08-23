@@ -49,7 +49,7 @@ export default function Offer() {
           className="card-white p-8 shadow-[0_12px_48px_rgba(0,0,0,0.08)] sm:p-10"
         >
           {product.stockLeft !== null && (
-            <p className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 text-sm font-semibold text-amber-700">
+            <p className="inline-flex items-center gap-2 rounded-full border border-amber-200 bg-amber-50 px-4 py-1.5 font-display text-sm font-semibold text-amber-700">
               {/* Raio sólido: no tamanho do texto do selo, o preenchimento lê
                   melhor que contorno e herda o âmbar do próprio selo. */}
               <svg
@@ -72,7 +72,7 @@ export default function Offer() {
                 {formatBRL(product.compareAtPriceCents)}
               </span>
             )}
-            <span className="text-5xl font-bold tracking-[-0.02em] sm:text-6xl">
+            <span className="font-display text-5xl font-bold sm:text-6xl">
               {formatBRL(product.priceCents)}
             </span>
           </div>

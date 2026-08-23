@@ -16,7 +16,7 @@ export default function Stats() {
               key={stat.label}
               className="flex flex-col items-center gap-1 sm:border-l sm:border-line-soft sm:first:border-l-0"
             >
-              <dd className="order-1 text-4xl font-bold tracking-[-0.02em]">{stat.value}</dd>
+              <dd className="order-1 font-display text-4xl font-bold">{stat.value}</dd>
               <dt className="order-2 text-sm text-ink-soft">{stat.label}</dt>
             </div>
           ))}

@@ -38,10 +38,19 @@ html.lenis body {
     @apply bg-white font-sans text-ink antialiased;
   }
 
-  /* Todo título grande é Oswald, tenha ou não a classe font-display. Os pesos
-     e tamanhos continuam nas utilities de cada componente. */
+  /* Divisão de papéis do par: Baloo 2 é ESTRUTURA E AÇÃO — todos os níveis
+     de título, controles e campos —, Playfair é a voz editorial que fica nos
+     parágrafos (herdada do body). Misturar as duas no mesmo papel foi o que
+     deixou o site desarmônico na primeira tentativa. */
   h1,
-  h2 {
+  h2,
+  h3,
+  h4,
+  button,
+  input,
+  select,
+  textarea,
+  label {
     @apply font-display;
   }
 
@@ -86,16 +95,16 @@ html.lenis body {
 }
 
 @layer components {
-  /* Botão primário — pílula azul, única cor de ação do site */
+  /* Botão primário — pílula verde, única cor de ação do site */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 text-[15px] font-semibold text-white transition hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-accent px-7 py-3.5 font-display text-[15px] font-semibold text-white transition hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
     transition-timing-function: var(--ease-apple);
     transition-duration: var(--dur-base);
   }
 
   /* Ação secundária discreta ("Saiba mais ›") */
   .btn-quiet {
-    @apply inline-flex items-center gap-1.5 text-[15px] font-medium text-accent transition hover:opacity-70;
+    @apply inline-flex items-center gap-1.5 font-display text-[15px] font-medium text-accent transition hover:opacity-70;
     transition-timing-function: var(--ease-apple);
     transition-duration: var(--dur-base);
   }
@@ -110,10 +119,10 @@ html.lenis body {
     @apply rounded-3xl border border-line-soft bg-white shadow-[0_2px_20px_rgba(0,0,0,0.04)];
   }
 
-  /* Caps de serifada com vão largo: o eyebrow editorial clássico. Herda a
-     Playfair do corpo — sem utility de família aqui de propósito. */
+  /* Caps de serifada com vão largo: o eyebrow editorial clássico — um dos
+     poucos lugares onde a Playfair aparece pequena, de propósito. */
   .eyebrow {
-    @apply text-[13px] font-semibold uppercase tracking-[0.18em] text-ink-soft;
+    @apply font-sans text-[13px] font-semibold uppercase tracking-[0.18em] text-ink-soft;
   }
 }
 

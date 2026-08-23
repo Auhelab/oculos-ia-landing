@@ -59,7 +59,7 @@ export default function Hero() {
         </div>
 
         <p
-          className="animate-fade-up mt-4 text-sm text-ink-soft"
+          className="animate-fade-up mt-4 font-display text-sm text-ink-soft"
           style={{ animationDelay: "360ms" }}
         >
           {formatBRL(product.priceCents)} ou {product.maxInstallments}x de {installment} sem
