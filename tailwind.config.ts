@@ -18,15 +18,14 @@ export default {
         "accent-hover": "#166534",
       },
       fontFamily: {
-        sans: ['"Instrument Sans"', "system-ui", "sans-serif"],
-        // Títulos (h1/h2 via camada base + classe font-display). Um peso só
-        // (600) para não pesar o carregamento — Oswald é condensada, então
-        // dispensa o tracking negativo que os títulos usavam antes.
-        display: ["Oswald", '"Instrument Sans"', "system-ui", "sans-serif"],
-        // Fonte de acento manuscrita: SÓ etiqueta eyebrow e citações de
-        // avaliação. Nunca em preço, botão ou checkout — manuscrita no
-        // caminho do dinheiro derruba a credibilidade.
-        hand: ['"Indie Flower"', "cursive"],
+        // O token mantém o nome padrão do Tailwind ("sans") para toda
+        // utility existente continuar valendo, mas o corpo do site inteiro
+        // é a serifada Playfair Display — par pedido pelo dono da loja.
+        sans: ['"Playfair Display"', "Georgia", "serif"],
+        // Títulos (h1/h2 via camada base + classe font-display). Baloo 2 é
+        // a gêmea GRATUITA da Block Berthold do par de referência — a Block
+        // é fonte paga da fundição Berthold, sem versão legal de graça.
+        display: ['"Baloo 2"', "system-ui", "sans-serif"],
       },
       maxWidth: {
         page: "68rem",

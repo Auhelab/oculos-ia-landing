@@ -39,7 +39,7 @@ export default function Faq() {
   return (
     <section id="faq" className="py-24 sm:py-32">
       <div className="mx-auto max-w-3xl px-6">
-        <h2 data-reveal className="text-3xl font-semibold sm:text-5xl">
+        <h2 data-reveal className="text-3xl font-extrabold sm:text-5xl">
           Perguntas frequentes.
         </h2>
 

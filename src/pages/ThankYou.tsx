@@ -65,7 +65,7 @@ export default function ThankYou() {
             <path d="M4.5 12.5l5 5L19.5 7" />
           </svg>
         </div>
-        <h1 className="mt-6 text-3xl font-semibold sm:text-4xl">
+        <h1 className="mt-6 text-3xl font-extrabold sm:text-4xl">
           Pagamento aprovado!
         </h1>
         <p className="mt-3 text-ink-soft">

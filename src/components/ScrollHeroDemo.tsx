@@ -323,7 +323,7 @@ export default function ScrollHeroDemo() {
         {/* Desfecho + CTA */}
         <div className="pointer-events-none absolute inset-x-6 bottom-[10%] z-30 text-center">
           <div ref={finalRef} className="will-change-[opacity,transform]" style={{ opacity: 0 }}>
-            <h2 className="text-3xl font-semibold sm:text-5xl">
+            <h2 className="text-3xl font-extrabold sm:text-5xl">
               Tudo isso, num só óculos.
             </h2>
             <a href="#checkout" className="btn-primary mt-6 px-8">

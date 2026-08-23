@@ -222,7 +222,7 @@ export default function AdminDashboard() {
           <a href="#/" className="text-sm text-white/55 transition hover:text-white">
             ← Voltar à loja
           </a>
-          <h1 className="mt-4 font-display text-2xl font-semibold tracking-tight">
+          <h1 className="mt-4 font-display text-2xl font-extrabold tracking-tight">
             Painel de pedidos
           </h1>
           <p className="mt-2 text-sm text-white/60">Acesso restrito. Informe a chave de administrador.</p>
@@ -251,7 +251,7 @@ export default function AdminDashboard() {
     <main className="mx-auto min-h-screen max-w-3xl px-5 py-10">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-display text-2xl font-semibold tracking-tight">Pedidos</h1>
+          <h1 className="font-display text-2xl font-extrabold tracking-tight">Pedidos</h1>
           <a href="#/" className="text-sm text-white/50 transition hover:text-white">
             ← Voltar à loja
           </a>

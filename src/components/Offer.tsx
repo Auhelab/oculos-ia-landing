@@ -15,7 +15,7 @@ export default function Offer() {
     <section id="oferta" className="py-24 sm:py-32">
       <div className="mx-auto grid max-w-page items-center gap-12 px-6 lg:grid-cols-2">
         <div data-reveal>
-          <h2 className="text-3xl font-semibold sm:text-5xl">
+          <h2 className="text-3xl font-extrabold sm:text-5xl">
             Oferta de lançamento.
           </h2>
           <p className="mt-3 max-w-md text-lg text-ink-soft">

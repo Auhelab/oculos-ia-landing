@@ -165,7 +165,7 @@ export default function TrackOrder() {
         <a href="#/" className="text-sm text-ink-soft transition hover:text-ink">
           ← Voltar à loja
         </a>
-        <h1 className="mt-4 text-center font-display text-3xl font-semibold tracking-tight text-ink">
+        <h1 className="mt-4 text-center font-display text-3xl font-extrabold tracking-tight text-ink">
           Rastrear pedido
         </h1>
         <p className="mt-2 text-center text-sm text-ink-soft">
