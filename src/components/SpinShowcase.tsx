@@ -7,7 +7,8 @@ import { useEffect, useRef, useState } from "react";
  * índice do frame é dirigido pela posição do scroll — mapeamento LINEAR, então a
  * velocidade da rotação é constante ao longo de todo o trajeto.
  *
- * Estrutura: a seção é alta (460vh) e o palco fica sticky ocupando a viewport.
+ * Estrutura: a seção é alta (280vh — era 460vh, encurtada porque o giro pedia
+ * rolagem demais) e o palco fica sticky ocupando a viewport.
  * O progresso do scroll (0→1) mistura GIRO + APROXIMAÇÃO + FOCO + FADE em 3 trechos:
  *  - 0.00–0.10  ENTRADA: materializa — desfoca→nítido + fade-in + escala 0.84→1
  *  - 0.10–0.82  GIRO: frames 0→59 (arco), legendas Tradução/Câmera/Música
@@ -350,7 +351,7 @@ export default function SpinShowcase() {
   }
 
   return (
-    <section ref={sectionRef} aria-label="Destaques do produto" className="relative h-[460vh]">
+    <section ref={sectionRef} aria-label="Destaques do produto" className="relative h-[280vh]">
       <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden">
         {/* Palco do produto (canvas) */}
         <div ref={stageRef} className="relative z-10 w-[min(92vw,60rem)]">
