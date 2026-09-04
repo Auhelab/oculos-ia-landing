@@ -98,6 +98,16 @@ html.lenis body {
     @apply rounded-3xl bg-haze;
   }
 
+  /* A sequência do giro tem a sombra do produto cortada rente à base em 22 dos
+     60 quadros (o pior chega a cinza 213 a 8px da borda). Contra o branco da
+     página isso vira uma linha reta atravessando a tela. Este degradê dissolve
+     os últimos 7% do canvas; o ponto mais baixo que o óculos alcança em
+     qualquer quadro é 93,3%, então nada do produto é tocado. */
+  .canvas-sem-corte {
+    -webkit-mask-image: linear-gradient(to bottom, #000 93%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 93%, transparent 100%);
+  }
+
   /* Card branco elevado sobre fundo haze */
   .card-white {
     @apply rounded-3xl border border-line-soft bg-white shadow-[0_2px_20px_rgba(0,0,0,0.04)];

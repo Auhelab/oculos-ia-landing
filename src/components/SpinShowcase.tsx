@@ -355,7 +355,7 @@ export default function SpinShowcase() {
       <div className="sticky top-0 flex h-screen items-center justify-center overflow-hidden">
         {/* Palco do produto (canvas) */}
         <div ref={stageRef} className="relative z-10 w-[min(92vw,60rem)]">
-          <canvas ref={canvasRef} className="w-full will-change-[transform,filter]" />
+          <canvas ref={canvasRef} className="canvas-sem-corte w-full will-change-[transform,filter]" />
         </div>
 
         {/* Legendas das 3 features (desktop: alternam de lado / mobile: base) */}
