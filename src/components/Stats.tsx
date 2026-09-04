@@ -7,8 +7,11 @@ const stats = [
 ];
 
 export default function Stats() {
+  // Sem régua horizontal: a seção anterior é o palco fixo da animação, e a
+  // borda de topo aparecia cortando o produto enquanto ele ainda estava na
+  // tela. As demais seções da página já se separam só por espaço.
   return (
-    <section className="border-y border-line-soft py-16 sm:py-20">
+    <section className="py-16 sm:py-20">
       <div className="mx-auto max-w-page px-6">
         <dl data-reveal className="grid grid-cols-2 gap-y-10 sm:grid-cols-4">
           {stats.map((stat) => (
