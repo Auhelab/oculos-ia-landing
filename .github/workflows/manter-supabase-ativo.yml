@@ -1,0 +1,57 @@
+# Mantém o projeto Supabase acordado.
+#
+# O plano gratuito suspende o projeto após ~7 dias sem atividade, e quando isso
+# acontece a loja inteira cai junto: rastreio, checkout, tudo. Aconteceu em
+# agosto/2026 e ficou fora do ar por duas semanas sem ninguém perceber.
+#
+# Este job roda a cada 3 dias e chama a Edge Function `track-order` com um
+# pedido que não existe. A chamada é inofensiva (só leitura) mas atravessa o
+# caminho inteiro — gateway, Deno e uma consulta no banco —, que é o que conta
+# como atividade para o Supabase.
+#
+# De quebra ele vira alarme: se a resposta não for 404, o job falha e o GitHub
+# manda e-mail. Ou seja, a loja avisa quando o backend cai, em vez de morrer
+# calada.
+name: Manter Supabase ativo
+
+on:
+  schedule:
+    # 12:00 UTC = 09:00 em Brasília, a cada 3 dias.
+    - cron: "0 12 */3 * *"
+  workflow_dispatch: # permite disparar na mão pela aba Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chamar a Edge Function e conferir a resposta
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+
+          if [ -z "${SUPABASE_URL}" ] || [ -z "${SUPABASE_ANON_KEY}" ]; then
+            echo "::error::Faltam os secrets SUPABASE_URL e/ou SUPABASE_ANON_KEY no repositório."
+            exit 1
+          fi
+
+          codigo=$(curl -sS -m 30 -o /tmp/resposta.json -w "%{http_code}" \
+            -X POST "${SUPABASE_URL}/functions/v1/track-order" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Content-Type: application/json" \
+            -d '{"orderId":"000000","email":"keepalive@auhelab.com.br"}')
+
+          echo "HTTP ${codigo}"
+          cat /tmp/resposta.json || true
+          echo
+
+          # 404 = a função rodou e consultou o banco, e o pedido inventado não
+          # existe. É exatamente o que se espera de um projeto saudável.
+          if [ "${codigo}" != "404" ]; then
+            echo "::error::Resposta inesperada (${codigo}). O projeto pode estar pausado ou a função quebrada."
+            exit 1
+          fi
+
+          echo "Projeto respondendo normalmente."
