@@ -72,7 +72,7 @@ export default function Benefits() {
     <section id="recursos" className="py-24 sm:py-32">
       <div className="mx-auto max-w-page px-6">
         <div data-reveal>
-          <h2 className="max-w-2xl text-3xl font-extrabold sm:text-5xl">
+          <h2 className="max-w-2xl text-3xl font-bold tracking-[-0.02em] sm:text-5xl">
             Tecnologia de ponta. <span className="text-ink-soft">Em cada detalhe.</span>
           </h2>
         </div>

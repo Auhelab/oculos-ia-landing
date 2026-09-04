@@ -13,7 +13,7 @@ export default function Nav() {
     <header className="fixed inset-x-0 top-0 z-50 border-b border-line-soft bg-white/80 backdrop-blur-xl">
       <nav
         aria-label="Principal"
-        className="mx-auto flex h-14 max-w-page items-center justify-between px-6 font-display"
+        className="mx-auto flex h-14 max-w-page items-center justify-between px-6"
       >
         <a href="#/" className="flex items-center">
           {/* Símbolo "ab" da Auhelab (arte original, PNG com transparência).

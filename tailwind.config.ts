@@ -18,14 +18,10 @@ export default {
         "accent-hover": "#166534",
       },
       fontFamily: {
-        // O token mantém o nome padrão do Tailwind ("sans") para toda
-        // utility existente continuar valendo, mas o corpo do site inteiro
-        // é a serifada Playfair Display — par pedido pelo dono da loja.
-        sans: ['"Playfair Display"', "Georgia", "serif"],
-        // Títulos (h1/h2 via camada base + classe font-display). Baloo 2 é
-        // a gêmea GRATUITA da Block Berthold do par de referência — a Block
-        // é fonte paga da fundição Berthold, sem versão legal de graça.
-        display: ['"Baloo 2"', "system-ui", "sans-serif"],
+        sans: ['"Instrument Sans"', "system-ui", "sans-serif"],
+        // Só o título do herói. Um peso apenas (700) para não pesar o
+        // carregamento do primeiro elemento que o cliente vê.
+        display: ["Outfit", '"Instrument Sans"', "system-ui", "sans-serif"],
       },
       maxWidth: {
         page: "68rem",

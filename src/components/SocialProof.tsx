@@ -196,7 +196,7 @@ export default function SocialProof() {
           className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end"
         >
           <div>
-            <h2 className="text-3xl font-extrabold sm:text-5xl">
+            <h2 className="text-3xl font-bold tracking-[-0.02em] sm:text-5xl">
               Quem comprou, recomenda.
             </h2>
             <p className="mt-3 text-lg text-ink-soft">
@@ -271,7 +271,7 @@ export default function SocialProof() {
               )}
               <div className="flex flex-1 flex-col p-8">
                 <Stars rating={t.rating} />
-                <blockquote className="mt-4 flex-1 text-[15px] italic leading-relaxed text-ink-soft">
+                <blockquote className="mt-4 flex-1 text-[15px] leading-relaxed text-ink-soft">
                   “{t.quote}”
                 </blockquote>
                 <footer className="mt-6 text-sm">

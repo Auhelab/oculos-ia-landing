@@ -15,7 +15,7 @@ export default function Hero() {
         </p>
 
         <h1
-          className="animate-fade-up mt-4 max-w-3xl font-display text-[2.75rem] font-extrabold leading-[1.05] sm:text-6xl lg:text-7xl"
+          className="animate-fade-up mt-4 max-w-3xl font-display text-[2.75rem] font-bold leading-[1.05] tracking-[-0.02em] sm:text-6xl lg:text-7xl"
           style={{ animationDelay: "100ms" }}
         >
           {product.name}
@@ -59,7 +59,7 @@ export default function Hero() {
         </div>
 
         <p
-          className="animate-fade-up mt-4 font-display text-sm text-ink-soft"
+          className="animate-fade-up mt-4 text-sm text-ink-soft"
           style={{ animationDelay: "360ms" }}
         >
           {formatBRL(product.priceCents)} ou {product.maxInstallments}x de {installment} sem

@@ -29,7 +29,7 @@ export default function LegalShell({ title, children }: LegalShellProps) {
       </header>
 
       <article className="mx-auto max-w-3xl px-6 py-14">
-        <h1 className="text-3xl font-extrabold sm:text-4xl">{title}</h1>
+        <h1 className="text-3xl font-bold tracking-[-0.02em] sm:text-4xl">{title}</h1>
         <p className="mt-2 text-sm text-ink-soft">
           Última atualização: julho de 2026 · Documento placeholder · substituir pelo texto
           jurídico definitivo antes do lançamento.
