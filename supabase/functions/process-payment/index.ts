@@ -6,7 +6,7 @@
 
 import { handlePreflight, jsonResponse } from "../_shared/cors.ts";
 import { createAdminClient } from "../_shared/supabase.ts";
-import { sendPaidEmailOnce } from "../_shared/order-mailer.ts";
+import { sendPaidEmailOnce, sendPaymentFailedEmailOnce } from "../_shared/order-mailer.ts";
 
 const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 
@@ -182,6 +182,11 @@ Deno.serve(async (req) => {
     // e-mail. É idempotente — o webhook, se chegar depois, não reenvia.
     if (nextStatus === "paid") {
       await sendPaidEmailOnce(supabase, order.id);
+    }
+
+    // Recusado de imediato (ex.: cartão): avisa o cliente, uma vez por pedido.
+    if (nextStatus === "rejected") {
+      await sendPaymentFailedEmailOnce(supabase, order.id, status, statusDetail);
     }
 
     return jsonResponse({

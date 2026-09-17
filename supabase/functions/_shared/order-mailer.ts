@@ -192,3 +192,168 @@ function shippedEmailHtml(o: OrderRow): string {
   `;
   return emailLayout({ title: "Seu pedido está a caminho", body });
 }
+
+/**
+ * Envia o e-mail de "pedido entregue" no máximo uma vez.
+ * Chamado quando o pedido vira 'delivered' (17TRACK ou painel admin). O claim
+ * exige o status 'delivered' para nunca avisar entrega de um pedido que não
+ * foi entregue.
+ */
+export async function sendDeliveredEmailOnce(
+  supabase: SupabaseClient,
+  orderId: string,
+): Promise<void> {
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ delivered_email_sent_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .eq("status", "delivered")
+    .is("delivered_email_sent_at", null)
+    .select(ORDER_COLUMNS)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Falha ao reivindicar e-mail de entrega:", error);
+    return;
+  }
+  if (!data) return;
+
+  const order = data as unknown as OrderRow;
+  const ok = await sendEmail({
+    to: order.customer_email,
+    subject: `Seu pedido ${orderLabel(order)} foi entregue`,
+    html: deliveredEmailHtml(order),
+  });
+
+  if (!ok) {
+    await supabase
+      .from("orders")
+      .update({ delivered_email_sent_at: null })
+      .eq("id", order.id);
+  }
+}
+
+/** Motivo da falha de pagamento que justifica avisar o cliente. */
+type PaymentFailure = "rejected" | "pix_expired";
+
+/**
+ * Classifica o retorno do MP. Só avisamos o cliente em dois casos:
+ *  - status "rejected": o banco/emissor recusou (ex.: cartão);
+ *  - status "cancelled" com detalhe "expired": o Pix venceu sem pagamento.
+ * Qualquer outro cancelamento é ignorado de propósito — o principal é o
+ * cancelamento que o próprio process-payment faz quando o cliente troca o Pix
+ * pelo cartão, e avisar "pagamento recusado" nesse momento seria falso.
+ */
+function classifyPaymentFailure(mpStatus: string, statusDetail: string): PaymentFailure | null {
+  if (mpStatus === "rejected") return "rejected";
+  if (mpStatus === "cancelled" && statusDetail === "expired") return "pix_expired";
+  return null;
+}
+
+/**
+ * Envia o e-mail de "pagamento não concluído" (recusado ou Pix expirado) no
+ * máximo uma vez por pedido. Recebe o status CRU do Mercado Pago, que é o que
+ * distingue recusa, Pix expirado e cancelamento interno. O claim exige o
+ * pedido ainda em 'rejected': se ele já foi pago por outro caminho, não envia.
+ */
+export async function sendPaymentFailedEmailOnce(
+  supabase: SupabaseClient,
+  orderId: string,
+  mpStatus: string,
+  statusDetail: string,
+): Promise<void> {
+  const failure = classifyPaymentFailure(mpStatus, statusDetail);
+  if (!failure) return;
+
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ payment_failed_email_sent_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .eq("status", "rejected")
+    .is("payment_failed_email_sent_at", null)
+    .select(ORDER_COLUMNS)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Falha ao reivindicar e-mail de pagamento não concluído:", error);
+    return;
+  }
+  if (!data) return;
+
+  const order = data as unknown as OrderRow;
+  const ok = await sendEmail({
+    to: order.customer_email,
+    subject: failure === "pix_expired"
+      ? `Seu Pix expirou — pedido ${orderLabel(order)}`
+      : `Não conseguimos aprovar seu pagamento — pedido ${orderLabel(order)}`,
+    html: paymentFailedEmailHtml(order, failure),
+  });
+
+  if (!ok) {
+    await supabase
+      .from("orders")
+      .update({ payment_failed_email_sent_at: null })
+      .eq("id", order.id);
+  }
+}
+
+/** Link de volta ao checkout da landing. */
+function checkoutUrl(): string {
+  if (!STORE_URL) return "";
+  return `${STORE_URL}/#checkout`;
+}
+
+function deliveredEmailHtml(o: OrderRow): string {
+  const body = `
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#c9d3ea;">
+      Oi, ${escapeHtml(firstName(o.customer_name))}! O transportador confirmou a entrega do seu
+      <strong style="color:#fff;">${STORE_NAME}</strong>.
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;border:1px solid #22305c;border-radius:12px;">
+      <tr><td style="padding:16px 18px;font-size:14px;line-height:1.7;color:#c9d3ea;">
+        <div style="color:#7f8db3;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Pedido</div>
+        <div style="font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff;">${escapeHtml(orderLabel(o))}</div>
+        <div style="margin-top:10px;color:#7f8db3;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Entregue em</div>
+        <div>${addressLine(o)}</div>
+      </td></tr>
+    </table>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#c9d3ea;">
+      Não recebeu ou encontrou algum problema com o produto? Responda este e-mail
+      que a gente resolve.
+    </p>
+    ${ctaButton("Ver detalhes do pedido", trackUrl(orderRef(o)))}
+  `;
+  return emailLayout({ title: "Pedido entregue", body });
+}
+
+function paymentFailedEmailHtml(o: OrderRow, failure: PaymentFailure): string {
+  const reason = failure === "pix_expired"
+    ? `O código Pix do seu pedido venceu antes de o pagamento ser feito, então
+       nenhum valor foi cobrado.`
+    : `O pagamento do seu pedido não foi aprovado pela operadora, então nenhum
+       valor foi cobrado. Isso costuma acontecer por limite, dados do cartão ou
+       bloqueio de segurança do banco.`;
+  const body = `
+    <p style="margin:0 0 14px;font-size:15px;line-height:1.6;color:#c9d3ea;">
+      Oi, ${escapeHtml(firstName(o.customer_name))}. ${reason}
+    </p>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:18px 0;border:1px solid #22305c;border-radius:12px;">
+      <tr><td style="padding:16px 18px;font-size:14px;line-height:1.7;color:#c9d3ea;">
+        <div style="color:#7f8db3;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Pedido</div>
+        <div style="font-family:ui-monospace,Menlo,Consolas,monospace;color:#fff;">${escapeHtml(orderLabel(o))}</div>
+        <div style="margin-top:10px;color:#7f8db3;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Valor</div>
+        <div style="color:#fff;font-weight:700;font-size:16px;">${formatBRL(o.amount_cents)}</div>
+      </td></tr>
+    </table>
+    <p style="margin:0;font-size:14px;line-height:1.6;color:#c9d3ea;">
+      Seu ${STORE_NAME} continua disponível. Você pode tentar de novo com outro
+      cartão ou pagar com Pix. Se já conseguiu finalizar a compra, pode ignorar
+      este e-mail.
+    </p>
+    ${ctaButton("Tentar novamente", checkoutUrl())}
+  `;
+  return emailLayout({
+    title: failure === "pix_expired" ? "Seu Pix expirou" : "Pagamento não aprovado",
+    body,
+  });
+}

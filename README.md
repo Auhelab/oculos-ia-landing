@@ -115,24 +115,92 @@ supabase link --project-ref SEU_PROJECT_REF
 # 2. Criar as tabelas products + orders (com seed do preço)
 supabase db push
 
-# 3. Publicar as três Edge Functions
+# 3. Publicar as Edge Functions
 supabase functions deploy create-order
 supabase functions deploy process-payment
 supabase functions deploy mp-webhook
+supabase functions deploy admin-orders
+supabase functions deploy track-order
+supabase functions deploy tracking-webhook
 
 # 4. Configurar os segredos do Mercado Pago (NUNCA vão para o frontend)
 supabase secrets set MP_ACCESS_TOKEN=seu_access_token
 supabase secrets set MP_WEBHOOK_SECRET=seu_secret_do_webhook
+
+# 5. Configurar o e-mail transacional (ver seção "E-mail transacional")
+supabase secrets set RESEND_API_KEY=sua_chave_do_resend
+supabase secrets set EMAIL_FROM="Óculos IA <pedidos@seudominio.com.br>"
+supabase secrets set STORE_URL=https://sua-loja.com.br
+
+# 6. Painel admin e rastreio automático (opcionais)
+supabase secrets set ADMIN_API_KEY=uma_chave_longa_e_aleatoria
+supabase secrets set TRACK17_API_KEY=sua_chave_do_17track
 ```
 
-5. **Webhook no painel do Mercado Pago** → *Suas integrações › Webhooks*:
+7. **Webhook no painel do Mercado Pago** → *Suas integrações › Webhooks*:
    - URL: `https://SEU_PROJECT_REF.supabase.co/functions/v1/mp-webhook`
    - Evento: **Pagamentos**
    - Copie a *chave secreta* gerada e use-a no `MP_WEBHOOK_SECRET` do passo 4.
 
-6. **Frontend** — preencha o `.env` (a partir do `.env.example`):
+8. **Frontend** — preencha o `.env` (a partir do `.env.example`):
    `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY` (painel Supabase › Settings › API)
    e `VITE_MP_PUBLIC_KEY` (painel MP › credenciais).
+
+### E-mail transacional
+
+Os e-mails saem pelo [Resend](https://resend.com) via `fetch`, sem SDK
+([`_shared/email.ts`](supabase/functions/_shared/email.ts)). São cinco, montados em
+[`_shared/order-mailer.ts`](supabase/functions/_shared/order-mailer.ts):
+
+| E-mail | Disparado por | Quando |
+| --- | --- | --- |
+| **Pagamento aprovado** | `process-payment` (cartão) e `mp-webhook` (Pix) | assim que o pedido vira `paid` |
+| **Pedido despachado** | `admin-orders` (ação `ship`) | quando o admin grava o código de rastreio |
+| **Pedido entregue** | `tracking-webhook` (17TRACK) e `admin-orders` (ação `deliver`) | quando o pedido vira `delivered` |
+| **Pagamento não aprovado** | `process-payment` (cartão) e `mp-webhook` | o Mercado Pago devolve status `rejected` |
+| **Pix expirou** | `mp-webhook` | o Mercado Pago devolve `cancelled` com detalhe `expired` |
+
+Os dois últimos dividem a mesma coluna de controle, então o cliente recebe **no
+máximo um** aviso de falha por pedido. Outros cancelamentos são ignorados de
+propósito: quando o cliente troca o Pix pelo cartão, o `process-payment` cancela o
+Pix antigo, e avisar "pagamento recusado" nesse momento seria falso.
+
+Secrets:
+
+| Secret | Obrigatório | Para quê |
+| --- | --- | --- |
+| `RESEND_API_KEY` | **sim** | sem ela **nenhum e-mail é enviado** (ver aviso abaixo) |
+| `EMAIL_FROM` | recomendado | remetente. Default: `onboarding@resend.dev`, que em produção **só entrega no e-mail dono da conta Resend** — use um domínio verificado em *Resend › Domains* |
+| `STORE_URL` | recomendado | base dos links. Vazia, os botões "Acompanhar meu pedido" / "Rastrear entrega" **não são renderizados** |
+
+> **Atenção — falha silenciosa.** Se `RESEND_API_KEY` estiver ausente, `sendEmail`
+> apenas loga um aviso e devolve `false`, de propósito: e-mail nunca derruba a
+> confirmação de um pagamento. O efeito colateral é que a loja pode rodar sem
+> enviar nada e nada quebrar visivelmente. Depois de configurar, confirme com um
+> pedido de teste (abaixo).
+
+**Idempotência.** Cada e-mail sai no máximo uma vez por pedido. O controle são as
+colunas `paid_email_sent_at`, `shipped_email_sent_at` ([`0002_fulfillment.sql`](supabase/migrations/0002_fulfillment.sql)),
+`delivered_email_sent_at` e `payment_failed_email_sent_at` ([`0006_delivered_and_failed_emails.sql`](supabase/migrations/0006_delivered_and_failed_emails.sql)):
+a função faz um `update ... where <coluna> is null` e só envia se aquele update
+devolveu a linha. Assim, se `process-payment` e `mp-webhook` confirmarem o mesmo
+pedido, só o primeiro dispara. Se o Resend recusar, o claim volta para `null`
+para permitir nova tentativa.
+
+Consequência prática para diagnóstico: **`paid_email_sent_at` preenchido significa
+que o Resend aceitou a mensagem** — é a forma mais confiável de auditar envios,
+já que os logs têm retenção curta (1 dia nas Edge Functions no plano Free, 30
+dias no Resend).
+
+```sql
+-- quais pedidos pagos ficaram sem e-mail
+select order_number, status, created_at, paid_email_sent_at, shipped_email_sent_at,
+       delivered_email_sent_at, payment_failed_email_sent_at
+from orders order by created_at desc;
+```
+
+Para reenviar um e-mail, zere a coluna correspondente e refaça a ação que o
+dispara (`update orders set paid_email_sent_at = null where id = '...';`).
 
 ### Ajustar o preço
 
@@ -148,7 +216,31 @@ Use as credenciais de **teste** e os
 aprovado (nome do titular `APRO`), recusado (`OTHE`) e Pix sandbox. Confira o
 pedido mudando de `pending` → `paid`/`rejected` na tabela `orders` após o webhook.
 
-## Fora do escopo (Etapa 4 sugerida)
+**Conferindo os e-mails.** O de pagamento sai sozinho quando o pedido vira `paid`.
+O de despacho exige a ação `ship` do painel (`#/admin`, autenticado com
+`ADMIN_API_KEY`) — e ela só aceita pedidos já **pagos**. Para testar sem tocar em
+um pedido real, crie um pedido de teste com o **seu** e-mail, marque-o como pago
+e despache-o pelo painel:
 
-E-mail transacional, rastreio, painel de pedidos, boleto, testes unitários das
-libs (`cpf`, `phone`, `cep`), analytics/pixel e textos jurídicos definitivos.
+```sql
+insert into orders (
+  product_id, customer_name, customer_email, customer_whatsapp, customer_cpf,
+  address_cep, address_street, address_number, address_neighborhood,
+  address_city, address_state, amount_cents, status
+) values (
+  (select id from products limit 1), 'Teste E-mail', 'voce@exemplo.com',
+  '11999999999', '00000000000', '01001000', 'Rua Teste', '1', 'Centro',
+  'São Paulo', 'SP', (select price_cents from products limit 1), 'paid'
+) returning id, order_number;
+```
+
+Depois confira a entrega em *Resend › Emails* e apague o pedido de teste.
+
+## Fora do escopo
+
+Boleto, testes unitários das libs (`cpf`, `phone`, `cep`), analytics/pixel e
+textos jurídicos definitivos.
+
+E-mail transacional, rastreio e painel de pedidos **já foram implementados** —
+veja [E-mail transacional](#e-mail-transacional) e as funções `admin-orders`,
+`track-order` e `tracking-webhook`.

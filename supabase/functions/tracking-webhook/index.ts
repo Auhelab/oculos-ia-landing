@@ -10,6 +10,7 @@
 import { jsonResponse } from "../_shared/cors.ts";
 import { createAdminClient } from "../_shared/supabase.ts";
 import { parseTrackInfo, type TrackInfo } from "../_shared/track17.ts";
+import { sendDeliveredEmailOnce } from "../_shared/order-mailer.ts";
 
 const TRACK17_API_KEY = Deno.env.get("TRACK17_API_KEY");
 
@@ -85,11 +86,16 @@ Deno.serve(async (req) => {
 
     // Entregue: promove o status do pedido (apenas a partir de 'shipped').
     if (parsed?.internalStatus === "delivered" && order.status === "shipped") {
-      await supabase
+      const { data: delivered } = await supabase
         .from("orders")
         .update({ status: "delivered" })
         .eq("id", order.id)
-        .eq("status", "shipped");
+        .eq("status", "shipped")
+        .select("id")
+        .maybeSingle();
+
+      // Só avisa quando ESTE push promoveu o pedido (idempotente de todo modo).
+      if (delivered) await sendDeliveredEmailOnce(supabase, order.id);
     }
 
     return jsonResponse({ received: true });

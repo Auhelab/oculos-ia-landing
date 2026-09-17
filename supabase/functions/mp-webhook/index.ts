@@ -6,7 +6,7 @@
 
 import { jsonResponse } from "../_shared/cors.ts";
 import { createAdminClient } from "../_shared/supabase.ts";
-import { sendPaidEmailOnce } from "../_shared/order-mailer.ts";
+import { sendPaidEmailOnce, sendPaymentFailedEmailOnce } from "../_shared/order-mailer.ts";
 
 const MP_ACCESS_TOKEN = Deno.env.get("MP_ACCESS_TOKEN");
 const MP_WEBHOOK_SECRET = Deno.env.get("MP_WEBHOOK_SECRET");
@@ -117,6 +117,12 @@ Deno.serve(async (req) => {
     // confirmação por e-mail de forma idempotente.
     if (mappedStatus === "paid") {
       await sendPaidEmailOnce(supabase, externalReference);
+    }
+
+    // Recusa ou Pix expirado. O status CRU do MP decide se avisa: cancelamentos
+    // internos (troca de Pix por cartão) são filtrados dentro do mailer.
+    if (mappedStatus === "rejected") {
+      await sendPaymentFailedEmailOnce(supabase, externalReference, status, statusDetail);
     }
 
     return jsonResponse({ received: true });

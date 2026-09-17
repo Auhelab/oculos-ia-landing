@@ -10,11 +10,12 @@
 //   { action: "ship", orderId, trackingCode, trackingUrl? }
 //                                            → grava rastreio, marca 'shipped'
 //                                              e dispara o e-mail de despacho.
-//   { action: "deliver", orderId }           → marca 'delivered'.
+//   { action: "deliver", orderId }           → marca 'delivered'
+//                                              e dispara o e-mail de entrega.
 
 import { handlePreflight, jsonResponse } from "../_shared/cors.ts";
 import { createAdminClient } from "../_shared/supabase.ts";
-import { sendShippedEmailOnce } from "../_shared/order-mailer.ts";
+import { sendDeliveredEmailOnce, sendShippedEmailOnce } from "../_shared/order-mailer.ts";
 import {
   register17Track,
   track17Configured,
@@ -156,6 +157,9 @@ Deno.serve(async (req) => {
       if (!updated) {
         return jsonResponse({ error: "Pedido não encontrado ou não despachado." }, 409);
       }
+
+      // E-mail de entrega (idempotente).
+      await sendDeliveredEmailOnce(supabase, orderId);
       return jsonResponse({ ok: true });
     }
 
