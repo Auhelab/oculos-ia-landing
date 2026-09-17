@@ -67,10 +67,18 @@ export function escapeHtml(value: string): string {
  * Layout base dos e-mails (tabelas + estilos inline, compatível com a maioria
  * dos clientes). Recebe o conteúdo interno já montado.
  */
-export function emailLayout(opts: { title: string; body: string }): string {
+export function emailLayout(opts: { title: string; body: string; preheader?: string }): string {
+  // Pré-cabeçalho: texto de prévia exibido na caixa de entrada, invisível no corpo.
+  const preheader = opts.preheader
+    ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(opts.preheader)}</div>`
+    : "";
+  const storeLink = STORE_URL
+    ? `<br/><a href="${escapeHtml(STORE_URL)}" style="color:#8ab4ff;text-decoration:none;">${escapeHtml(STORE_URL.replace(/^https?:\/\//, ""))}</a>`
+    : "";
   return `<!doctype html>
 <html lang="pt-BR">
   <body style="margin:0;padding:0;background:#0b1020;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+    ${preheader}
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b1020;padding:32px 12px;">
       <tr><td align="center">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#111a33;border:1px solid #22305c;border-radius:16px;overflow:hidden;">
@@ -83,7 +91,8 @@ export function emailLayout(opts: { title: string; body: string }): string {
           </td></tr>
           <tr><td style="padding:20px 32px;border-top:1px solid #22305c;color:#7f8db3;font-size:12px;line-height:1.6;">
             Você recebeu este e-mail porque fez um pedido em nossa loja.<br/>
-            Em caso de dúvida, basta responder a esta mensagem.
+            Em caso de dúvida, basta responder a esta mensagem.<br/>
+            Óculos Inteligentes IA${storeLink}
           </td></tr>
         </table>
       </td></tr>

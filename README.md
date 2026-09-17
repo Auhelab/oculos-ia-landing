@@ -152,13 +152,24 @@ Os e-mails saem pelo [Resend](https://resend.com) via `fetch`, sem SDK
 ([`_shared/email.ts`](supabase/functions/_shared/email.ts)). São cinco, montados em
 [`_shared/order-mailer.ts`](supabase/functions/_shared/order-mailer.ts):
 
-| E-mail | Disparado por | Quando |
-| --- | --- | --- |
-| **Pagamento aprovado** | `process-payment` (cartão) e `mp-webhook` (Pix) | assim que o pedido vira `paid` |
-| **Pedido despachado** | `admin-orders` (ação `ship`) | quando o admin grava o código de rastreio |
-| **Pedido entregue** | `tracking-webhook` (17TRACK) e `admin-orders` (ação `deliver`) | quando o pedido vira `delivered` |
-| **Pagamento não aprovado** | `process-payment` (cartão) e `mp-webhook` | o Mercado Pago devolve status `rejected` |
-| **Pix expirou** | `mp-webhook` | o Mercado Pago devolve `cancelled` com detalhe `expired` |
+| E-mail | Assunto | Disparado por | Quando |
+| --- | --- | --- | --- |
+| **Pagamento aprovado** | `Pagamento confirmado — pedido #X` | `process-payment` (cartão) e `mp-webhook` (Pix) | assim que o pedido vira `paid` |
+| **Pedido despachado** | `Pedido #X enviado — código de rastreio` | `admin-orders` (ação `ship`) | quando o admin grava o código de rastreio |
+| **Pedido entregue** | `Pedido #X entregue` | `tracking-webhook` (17TRACK) e `admin-orders` (ação `deliver`) | quando o pedido vira `delivered` |
+| **Pagamento não aprovado** | `Pagamento não aprovado — pedido #X` | `process-payment` (cartão) e `mp-webhook` | o Mercado Pago devolve status `rejected` |
+| **Pix expirou** | `Seu Pix expirou — pedido #X` | `mp-webhook` | o Mercado Pago devolve `cancelled` com detalhe `expired` |
+
+Os modelos compartilham blocos montados em `order-mailer.ts` (`detailsTable`,
+`stepsList`, `noticeBox`, `sectionHeading`) sobre o layout de `email.ts`, que
+aceita um `preheader` (texto de prévia da caixa de entrada). Prazos e direitos
+citados nos textos vêm do que a loja divulga no FAQ e nos Termos de Uso: entrega
+em **15 a 40 dias úteis**, arrependimento em **7 dias corridos** (art. 49 do CDC)
+e **90 dias** de garantia — se algum deles mudar no site, atualize também
+`DELIVERY_WINDOW` e o e-mail de entrega. No aviso de recusa, `rejectionReason()`
+traduz o `status_detail` do Mercado Pago (limite, CVV, validade, autorização do
+banco, antifraude…) em motivo e ação; detalhes fora da lista caem num texto
+genérico com os motivos mais comuns.
 
 Os dois últimos dividem a mesma coluna de controle, então o cliente recebe **no
 máximo um** aviso de falha por pedido. Outros cancelamentos são ignorados de
