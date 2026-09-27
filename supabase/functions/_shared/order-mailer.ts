@@ -71,6 +71,9 @@ export async function sendPaidEmailOnce(
   supabase: SupabaseClient,
   orderId: string,
 ): Promise<void> {
+  // Aviso de venda para o dono primeiro, com trava própria (ver 0007).
+  await notifySaleOnce(supabase, orderId);
+
   // Claim atômico: só vence quem transformar o NULL em timestamp.
   const { data, error } = await supabase
     .from("orders")
@@ -137,6 +140,67 @@ export async function sendShippedEmailOnce(
       .update({ shipped_email_sent_at: null })
       .eq("id", order.id);
   }
+}
+
+/** Caixa que recebe o aviso de venda nova (secret, fora do repositório público). */
+const SALES_NOTIFY_EMAIL = Deno.env.get("SALES_NOTIFY_EMAIL")?.trim() ?? "";
+
+/**
+ * Avisa o dono da loja de uma venda nova, no máximo uma vez por pedido.
+ * Assunto em caixa alta com o valor, para bater o olho na notificação do
+ * celular e já saber quanto entrou.
+ */
+async function notifySaleOnce(supabase: SupabaseClient, orderId: string): Promise<void> {
+  if (!SALES_NOTIFY_EMAIL) return;
+
+  const { data, error } = await supabase
+    .from("orders")
+    .update({ sale_notified_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .is("sale_notified_at", null)
+    .select(ORDER_COLUMNS)
+    .maybeSingle();
+
+  if (error) {
+    console.error("Falha ao reivindicar aviso de venda:", error);
+    return;
+  }
+  if (!data) return;
+
+  const order = data as OrderRow;
+  const ok = await sendEmail({
+    to: SALES_NOTIFY_EMAIL,
+    subject: `PAGAMENTO CONFIRMADO ${formatBRL(order.amount_cents)}`,
+    html: saleNotificationHtml(order),
+  });
+
+  if (!ok) {
+    await supabase.from("orders").update({ sale_notified_at: null }).eq("id", order.id);
+  }
+}
+
+function saleNotificationHtml(o: OrderRow): string {
+  const label = orderLabel(o);
+  const body = `
+    ${paragraph(`Entrou uma venda nova: pedido ${strong(escapeHtml(label))}, no valor de ${strong(formatBRL(o.amount_cents))}.`)}
+    ${detailsTable([
+      ["Pedido", mono(label)],
+      ["Valor", `<strong style="color:#1d1d1f;font-size:16px;">${formatBRL(o.amount_cents)}</strong>`],
+      ["Forma de pagamento", escapeHtml(paymentMethodLabel(o.payment_method))],
+      ["Data", escapeHtml(orderDate(o.created_at))],
+      ["Cliente", escapeHtml(o.customer_name.trim())],
+      ["E-mail", escapeHtml(o.customer_email)],
+    ])}
+    ${sectionHeading("Endereço de entrega")}
+    ${addressBlock(o)}
+    ${paragraph("Próximo passo: fazer o pedido no fornecedor e registrar o código de rastreio no painel.", true)}
+  `;
+  return emailLayout({
+    title: "Venda nova",
+    preheader: `${formatBRL(o.amount_cents)} no pedido ${label}.`,
+    body,
+    footer: "Aviso interno da loja, enviado só para o dono a cada pagamento aprovado.",
+  });
 }
 
 /** Id curto e legível para assuntos de e-mail (primeiro bloco do UUID). */

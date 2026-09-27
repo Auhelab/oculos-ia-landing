@@ -92,7 +92,7 @@ export const EMAIL_FONT =
  * fundo cinza-claro, card branco de cantos largos, logo "ab" no topo e o verde
  * da marca como única cor de ação.
  */
-export function emailLayout(opts: { title: string; body: string; preheader?: string }): string {
+export function emailLayout(opts: { title: string; body: string; preheader?: string; footer?: string }): string {
   // Pré-cabeçalho: texto de prévia exibido na caixa de entrada, invisível no corpo.
   const preheader = opts.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(opts.preheader)}</div>`
@@ -132,8 +132,7 @@ export function emailLayout(opts: { title: string; body: string; preheader?: str
         </table>
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
           <tr><td style="padding:20px 8px;color:${C.inkSoft};font-size:12px;line-height:1.6;">
-            Você recebeu este e-mail porque fez um pedido em nossa loja.
-            Em caso de dúvida, basta responder a esta mensagem.<br/>
+            ${opts.footer ?? "Você recebeu este e-mail porque fez um pedido em nossa loja. Em caso de dúvida, basta responder a esta mensagem."}<br/>
             Smart Glasses · Auhelab${storeLink}
           </td></tr>
         </table>
