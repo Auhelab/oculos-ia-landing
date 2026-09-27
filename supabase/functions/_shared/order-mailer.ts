@@ -142,8 +142,14 @@ export async function sendShippedEmailOnce(
   }
 }
 
-/** Caixa que recebe o aviso de venda nova (secret, fora do repositório público). */
-const SALES_NOTIFY_EMAIL = Deno.env.get("SALES_NOTIFY_EMAIL")?.trim() ?? "";
+/**
+ * Caixas que recebem o aviso de venda nova (secret, fora do repositório
+ * público). Aceita vários endereços separados por vírgula.
+ */
+const SALES_NOTIFY_EMAILS = (Deno.env.get("SALES_NOTIFY_EMAIL") ?? "")
+  .split(",")
+  .map((e) => e.trim())
+  .filter(Boolean);
 
 /**
  * Avisa o dono da loja de uma venda nova, no máximo uma vez por pedido.
@@ -151,7 +157,7 @@ const SALES_NOTIFY_EMAIL = Deno.env.get("SALES_NOTIFY_EMAIL")?.trim() ?? "";
  * celular e já saber quanto entrou.
  */
 async function notifySaleOnce(supabase: SupabaseClient, orderId: string): Promise<void> {
-  if (!SALES_NOTIFY_EMAIL) return;
+  if (SALES_NOTIFY_EMAILS.length === 0) return;
 
   // Instante da aprovação: é quando a venda de fato acontece, e é o horário
   // que aparece no aviso (o created_at é de quando o checkout foi aberto).
@@ -172,7 +178,7 @@ async function notifySaleOnce(supabase: SupabaseClient, orderId: string): Promis
 
   const order = data as OrderRow;
   const ok = await sendEmail({
-    to: SALES_NOTIFY_EMAIL,
+    to: SALES_NOTIFY_EMAILS,
     subject: `PAGAMENTO CONFIRMADO ${formatBRL(order.amount_cents)}`,
     html: saleNotificationHtml(order, aprovadoEm),
   });

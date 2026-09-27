@@ -11,7 +11,8 @@ const EMAIL_FROM = Deno.env.get("EMAIL_FROM") ?? "Óculos IA <onboarding@resend.
 export const STORE_URL = (Deno.env.get("STORE_URL") ?? "").replace(/\/+$/, "");
 
 export interface SendEmailInput {
-  to: string;
+  /** Um endereço ou vários (o Resend aceita lista). */
+  to: string | string[];
   subject: string;
   html: string;
 }
