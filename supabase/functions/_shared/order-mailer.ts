@@ -89,7 +89,7 @@ export async function sendPaidEmailOnce(
   const order = data as OrderRow;
   const ok = await sendEmail({
     to: order.customer_email,
-    subject: `Pagamento confirmado — pedido ${orderLabel(order)}`,
+    subject: `Pagamento confirmado: pedido ${orderLabel(order)}`,
     html: paidEmailHtml(order),
   });
 
@@ -127,7 +127,7 @@ export async function sendShippedEmailOnce(
   const order = data as OrderRow;
   const ok = await sendEmail({
     to: order.customer_email,
-    subject: `Pedido ${orderLabel(order)} enviado — código de rastreio`,
+    subject: `Pedido ${orderLabel(order)} enviado: veja o código de rastreio`,
     html: shippedEmailHtml(order),
   });
 
@@ -150,12 +150,12 @@ function shortId(id: string): string {
  * à direita, ele quebrava em pedaços soltos ("80010-" / "000") no celular.
  */
 function addressBlock(o: OrderRow): string {
-  const complement = o.address_complement?.trim() ? ` — ${o.address_complement.trim()}` : "";
+  const complement = o.address_complement?.trim() ? `, ${o.address_complement.trim()}` : "";
   const linhas = [
     `<strong style="color:#1d1d1f;">${escapeHtml(o.customer_name.trim())}</strong>`,
     escapeHtml(`${o.address_street}, ${o.address_number}${complement}`),
     escapeHtml(o.address_neighborhood),
-    escapeHtml(`${o.address_city} — ${o.address_state}`),
+    escapeHtml(`${o.address_city}, ${o.address_state}`),
     `CEP <span style="white-space:nowrap;">${escapeHtml(o.address_cep)}</span>`,
   ];
   return `<div style="margin:4px 0 8px;padding:14px 16px;border:1px solid #e8e8ed;border-radius:16px;font-size:14px;line-height:1.6;color:#1d1d1f;">${linhas.join("<br/>")}</div>`;
@@ -227,7 +227,7 @@ function noticeBox(html: string, tone: "info" | "warning" = "info"): string {
 
 /** Nome amigável da forma de pagamento (payment_method_id do Mercado Pago). */
 function paymentMethodLabel(method: string | null): string {
-  if (!method) return "—";
+  if (!method) return "Não informado";
   const brands: Record<string, string> = {
     pix: "Pix",
     visa: "Cartão Visa",
@@ -246,7 +246,7 @@ function paymentMethodLabel(method: string | null): string {
 /** Data do pedido no fuso de Brasília (ex.: 17/09/2026). */
 function orderDate(iso: string): string {
   const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "—";
+  if (Number.isNaN(d.getTime())) return "Não informada";
   return d.toLocaleDateString("pt-BR", { timeZone: "America/Sao_Paulo" });
 }
 
@@ -451,8 +451,8 @@ export async function sendPaymentFailedEmailOnce(
   const ok = await sendEmail({
     to: order.customer_email,
     subject: failure === "pix_expired"
-      ? `Seu Pix expirou — pedido ${orderLabel(order)}`
-      : `Pagamento não aprovado — pedido ${orderLabel(order)}`,
+      ? `Seu Pix expirou: pedido ${orderLabel(order)}`
+      : `Pagamento não aprovado: pedido ${orderLabel(order)}`,
     html: paymentFailedEmailHtml(order, failure, statusDetail),
   });
 
