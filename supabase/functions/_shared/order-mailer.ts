@@ -144,12 +144,21 @@ function shortId(id: string): string {
   return id.split("-")[0].toUpperCase();
 }
 
-function addressLine(o: OrderRow): string {
-  const complement = o.address_complement?.trim() ? ` (${o.address_complement.trim()})` : "";
-  return escapeHtml(
-    `${o.address_street}, ${o.address_number}${complement} — ${o.address_neighborhood}, ` +
-      `${o.address_city}/${o.address_state} — CEP ${o.address_cep}`,
-  );
+/**
+ * Endereço em bloco próprio, uma informação por linha e alinhado à esquerda —
+ * o formato de Amazon, Apple e Shopify. Dentro da tabela de resumo, alinhado
+ * à direita, ele quebrava em pedaços soltos ("80010-" / "000") no celular.
+ */
+function addressBlock(o: OrderRow): string {
+  const complement = o.address_complement?.trim() ? ` — ${o.address_complement.trim()}` : "";
+  const linhas = [
+    `<strong style="color:#1d1d1f;">${escapeHtml(o.customer_name.trim())}</strong>`,
+    escapeHtml(`${o.address_street}, ${o.address_number}${complement}`),
+    escapeHtml(o.address_neighborhood),
+    escapeHtml(`${o.address_city} — ${o.address_state}`),
+    `CEP <span style="white-space:nowrap;">${escapeHtml(o.address_cep)}</span>`,
+  ];
+  return `<div style="margin:4px 0 8px;padding:14px 16px;border:1px solid #e8e8ed;border-radius:16px;font-size:14px;line-height:1.6;color:#1d1d1f;">${linhas.join("<br/>")}</div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -270,8 +279,9 @@ function paidEmailHtml(o: OrderRow): string {
       ["Produto", escapeHtml(STORE_NAME)],
       ["Forma de pagamento", escapeHtml(paymentMethodLabel(o.payment_method))],
       ["Total pago", `<strong style="color:#1d1d1f;font-size:16px;">${formatBRL(o.amount_cents)}</strong>`],
-      ["Entrega em", addressLine(o)],
     ])}
+    ${sectionHeading("Endereço de entrega")}
+    ${addressBlock(o)}
     ${noticeBox(
       `${strong("Confira o endereço de entrega.")} Se algo estiver incorreto, responda este e-mail
        o quanto antes: conseguimos corrigir enquanto o pedido ainda não foi postado.`,
@@ -333,7 +343,7 @@ function shippedEmailHtml(o: OrderRow): string {
       },
     ])}
     ${sectionHeading("Endereço de entrega")}
-    ${paragraph(addressLine(o))}
+    ${addressBlock(o)}
     ${noticeBox(
       `${strong("Bom saber:")} o rastreio pode levar alguns dias para exibir as primeiras
        movimentações, e em alguns trechos do transporte as atualizações ficam mais espaçadas.
@@ -468,10 +478,9 @@ function deliveredEmailHtml(o: OrderRow): string {
       `A transportadora registrou a entrega do seu pedido ${strong(escapeHtml(label))}.
        Esperamos que aproveite seus ${strong(STORE_NAME)}.`,
     )}
-    ${detailsTable([
-      ["Pedido", mono(label)],
-      ["Endereço", addressLine(o)],
-    ])}
+    ${detailsTable([["Pedido", mono(label)]])}
+    ${sectionHeading("Endereço de entrega")}
+    ${addressBlock(o)}
     ${noticeBox(
       `${strong("Não recebeu o pacote?")} Às vezes a transportadora marca a entrega antes de ela
        acontecer, ou o pacote fica com um vizinho ou na portaria. Se não encontrar, responda este
