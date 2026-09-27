@@ -40,7 +40,7 @@ interface OrderRow {
   created_at: string;
 }
 
-const STORE_NAME = "Óculos Inteligentes IA";
+const STORE_NAME = "Smart Glasses";
 
 /** Link para a página de rastreio, já com o pedido pré-preenchido. */
 function trackUrl(orderRef: string): string {
@@ -160,17 +160,17 @@ function addressLine(o: OrderRow): string {
 const DELIVERY_WINDOW = "15 a 40 dias úteis";
 
 function paragraph(html: string, muted = false): string {
-  const color = muted ? "#7f8db3" : "#c9d3ea";
+  const color = muted ? "#6e6e73" : "#1d1d1f";
   const size = muted ? "13px" : "15px";
   return `<p style="margin:0 0 14px;font-size:${size};line-height:1.65;color:${color};">${html}</p>`;
 }
 
 function strong(text: string): string {
-  return `<strong style="color:#ffffff;">${text}</strong>`;
+  return `<strong style="color:#1d1d1f;">${text}</strong>`;
 }
 
 function sectionHeading(text: string): string {
-  return `<div style="margin:24px 0 10px;color:#8ab4ff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;">${escapeHtml(text)}</div>`;
+  return `<div style="margin:24px 0 10px;color:#6e6e73;font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.18em;">${escapeHtml(text)}</div>`;
 }
 
 /** Tabela "rótulo → valor" com o resumo do pedido. Valores já em HTML seguro. */
@@ -179,12 +179,12 @@ function detailsTable(rows: Array<[string, string]>): string {
     .map(
       ([label, value], i) => `
       <tr>
-        <td style="padding:10px 16px;${i ? "border-top:1px solid #22305c;" : ""}color:#7f8db3;font-size:13px;white-space:nowrap;vertical-align:top;">${escapeHtml(label)}</td>
-        <td style="padding:10px 16px;${i ? "border-top:1px solid #22305c;" : ""}color:#e7ecf7;font-size:14px;line-height:1.5;text-align:right;">${value}</td>
+        <td style="padding:10px 16px;${i ? "border-top:1px solid #e8e8ed;" : ""}color:#6e6e73;font-size:13px;white-space:nowrap;vertical-align:top;">${escapeHtml(label)}</td>
+        <td style="padding:10px 16px;${i ? "border-top:1px solid #e8e8ed;" : ""}color:#1d1d1f;font-size:14px;line-height:1.5;text-align:right;">${value}</td>
       </tr>`,
     )
     .join("");
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 8px;border:1px solid #22305c;border-radius:12px;border-collapse:separate;">${cells}</table>`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 8px;border:1px solid #e8e8ed;border-radius:16px;border-collapse:separate;">${cells}</table>`;
 }
 
 /** Linha do tempo das etapas do pedido. */
@@ -192,17 +192,17 @@ function stepsList(steps: Array<{ title: string; text: string; state: "done" | "
   const rows = steps
     .map((s, i) => {
       const dot = s.state === "done"
-        ? `<div style="width:22px;height:22px;border-radius:11px;background:#39b6ff;color:#0b1020;font-size:13px;font-weight:700;line-height:22px;text-align:center;">✓</div>`
+        ? `<div style="width:22px;height:22px;border-radius:11px;background:#15803d;color:#1d1d1f;font-size:13px;font-weight:700;line-height:22px;text-align:center;">✓</div>`
         : s.state === "current"
-        ? `<div style="width:20px;height:20px;border-radius:11px;border:1px solid #39b6ff;color:#39b6ff;font-size:12px;font-weight:700;line-height:20px;text-align:center;">${i + 1}</div>`
-        : `<div style="width:20px;height:20px;border-radius:11px;border:1px solid #33416b;color:#7f8db3;font-size:12px;line-height:20px;text-align:center;">${i + 1}</div>`;
-      const titleColor = s.state === "next" ? "#c9d3ea" : "#ffffff";
+        ? `<div style="width:20px;height:20px;border-radius:11px;border:1px solid #15803d;color:#15803d;font-size:12px;font-weight:700;line-height:20px;text-align:center;">${i + 1}</div>`
+        : `<div style="width:20px;height:20px;border-radius:11px;border:1px solid #d2d2d7;color:#6e6e73;font-size:12px;line-height:20px;text-align:center;">${i + 1}</div>`;
+      const titleColor = s.state === "next" ? "#1d1d1f" : "#1d1d1f";
       return `
       <tr>
         <td style="width:34px;padding:0 0 14px;vertical-align:top;">${dot}</td>
         <td style="padding:1px 0 14px;vertical-align:top;">
           <div style="color:${titleColor};font-size:14px;font-weight:700;">${escapeHtml(s.title)}</div>
-          <div style="color:#9aa8cc;font-size:13px;line-height:1.55;">${s.text}</div>
+          <div style="color:#6e6e73;font-size:13px;line-height:1.55;">${s.text}</div>
         </td>
       </tr>`;
     })
@@ -212,8 +212,8 @@ function stepsList(steps: Array<{ title: string; text: string; state: "done" | "
 
 /** Caixa de destaque para avisos importantes. */
 function noticeBox(html: string, tone: "info" | "warning" = "info"): string {
-  const border = tone === "warning" ? "#f5b54a" : "#39b6ff";
-  return `<div style="margin:18px 0;padding:14px 16px;border-left:3px solid ${border};background:#0d1530;border-radius:8px;font-size:13px;line-height:1.6;color:#c9d3ea;">${html}</div>`;
+  const border = tone === "warning" ? "#b45309" : "#15803d";
+  return `<div style="margin:18px 0;padding:14px 16px;border-left:3px solid ${border};background:#f5f5f7;border-radius:8px;font-size:13px;line-height:1.6;color:#1d1d1f;">${html}</div>`;
 }
 
 /** Nome amigável da forma de pagamento (payment_method_id do Mercado Pago). */
@@ -247,7 +247,7 @@ function greeting(o: OrderRow): string {
 }
 
 function mono(text: string): string {
-  return `<span style="font-family:ui-monospace,Menlo,Consolas,monospace;color:#ffffff;">${escapeHtml(text)}</span>`;
+  return `<span style="font-family:ui-monospace,Menlo,Consolas,monospace;color:#1d1d1f;">${escapeHtml(text)}</span>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -269,7 +269,7 @@ function paidEmailHtml(o: OrderRow): string {
       ["Data", escapeHtml(orderDate(o.created_at))],
       ["Produto", escapeHtml(STORE_NAME)],
       ["Forma de pagamento", escapeHtml(paymentMethodLabel(o.payment_method))],
-      ["Total pago", `<strong style="color:#ffffff;font-size:16px;">${formatBRL(o.amount_cents)}</strong>`],
+      ["Total pago", `<strong style="color:#1d1d1f;font-size:16px;">${formatBRL(o.amount_cents)}</strong>`],
       ["Entrega em", addressLine(o)],
     ])}
     ${noticeBox(
@@ -309,9 +309,9 @@ function shippedEmailHtml(o: OrderRow): string {
   const label = orderLabel(o);
   const code = o.tracking_code ? escapeHtml(o.tracking_code) : "";
   const codeBlock = code
-    ? `<div style="margin:18px 0;padding:16px 18px;border:1px dashed #39b6ff;border-radius:12px;text-align:center;">
-         <div style="color:#7f8db3;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Código de rastreio</div>
-         <div style="margin-top:4px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20px;font-weight:700;color:#fff;letter-spacing:.05em;">${code}</div>
+    ? `<div style="margin:18px 0;padding:16px 18px;border:1px dashed #15803d;border-radius:12px;text-align:center;">
+         <div style="color:#6e6e73;font-size:12px;text-transform:uppercase;letter-spacing:.08em;">Código de rastreio</div>
+         <div style="margin-top:4px;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:20px;font-weight:700;color:#1d1d1f;letter-spacing:.05em;">${code}</div>
        </div>`
     : "";
   const body = `
@@ -598,8 +598,8 @@ function paymentFailedEmailHtml(o: OrderRow, failure: PaymentFailure, statusDeta
     ${detailsTable([
       ["Pedido", mono(label)],
       ["Produto", escapeHtml(STORE_NAME)],
-      ["Valor", `<strong style="color:#ffffff;">${formatBRL(o.amount_cents)}</strong>`],
-      ["Situação", `<span style="color:#f5b54a;">Aguardando pagamento</span>`],
+      ["Valor", `<strong style="color:#1d1d1f;">${formatBRL(o.amount_cents)}</strong>`],
+      ["Situação", `<span style="color:#b45309;">Aguardando pagamento</span>`],
     ])}
     ${reasonBlock}
     ${sectionHeading("Como concluir sua compra")}

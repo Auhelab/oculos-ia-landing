@@ -64,35 +64,77 @@ export function escapeHtml(value: string): string {
 }
 
 /**
+ * Paleta do design system da loja (tailwind.config.ts), repetida aqui porque
+ * e-mail não lê o CSS do site: tudo precisa ir inline. Mudou um token lá,
+ * muda aqui também.
+ */
+export const EMAIL_COLORS = {
+  ink: "#1d1d1f", // texto primário
+  inkSoft: "#6e6e73", // texto secundário
+  haze: "#f5f5f7", // fundo da página e superfícies
+  line: "#d2d2d7", // bordas mais marcadas
+  lineSoft: "#e8e8ed", // divisores sutis
+  accent: "#15803d", // única cor de ação (verde da marca)
+  accentSoft: "#f0fdf4", // fundo de destaque positivo
+  warn: "#b45309", // aviso (âmbar do selo de estoque)
+  warnSoft: "#fffbeb",
+} as const;
+
+const C = EMAIL_COLORS;
+
+/** Mesma pilha de fontes do site; clientes sem web font caem na do sistema. */
+export const EMAIL_FONT =
+  "'Instrument Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif";
+
+/**
  * Layout base dos e-mails (tabelas + estilos inline, compatível com a maioria
- * dos clientes). Recebe o conteúdo interno já montado.
+ * dos clientes). Recebe o conteúdo interno já montado. Visual espelha o site:
+ * fundo cinza-claro, card branco de cantos largos, logo "ab" no topo e o verde
+ * da marca como única cor de ação.
  */
 export function emailLayout(opts: { title: string; body: string; preheader?: string }): string {
   // Pré-cabeçalho: texto de prévia exibido na caixa de entrada, invisível no corpo.
   const preheader = opts.preheader
     ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${escapeHtml(opts.preheader)}</div>`
     : "";
+  const storeHost = STORE_URL.replace(/^https?:\/\//, "");
   const storeLink = STORE_URL
-    ? `<br/><a href="${escapeHtml(STORE_URL)}" style="color:#8ab4ff;text-decoration:none;">${escapeHtml(STORE_URL.replace(/^https?:\/\//, ""))}</a>`
+    ? `<br/><a href="${escapeHtml(STORE_URL)}" style="color:${C.accent};text-decoration:none;">${escapeHtml(storeHost)}</a>`
     : "";
+  // Logo "ab" da Auhelab, o mesmo da barra do site. Sem STORE_URL não há de
+  // onde servir a imagem, então cai para o nome em texto.
+  const brand = STORE_URL
+    ? `<img src="${escapeHtml(STORE_URL)}/images/logo-ab.png" alt="Smart Glasses" width="39" height="28" style="display:block;height:28px;width:auto;border:0;" />`
+    : `<div style="font-size:15px;font-weight:700;color:${C.ink};">Smart Glasses</div>`;
   return `<!doctype html>
 <html lang="pt-BR">
-  <body style="margin:0;padding:0;background:#0b1020;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="color-scheme" content="light only" />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  </head>
+  <body style="margin:0;padding:0;background:${C.haze};font-family:${EMAIL_FONT};-webkit-font-smoothing:antialiased;">
     ${preheader}
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#0b1020;padding:32px 12px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.haze};padding:32px 12px;">
       <tr><td align="center">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#111a33;border:1px solid #22305c;border-radius:16px;overflow:hidden;">
-          <tr><td style="padding:28px 32px 8px;">
-            <div style="font-size:13px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#8ab4ff;">Óculos Inteligentes IA</div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+          <tr><td style="padding:0 8px 18px;">${brand}</td></tr>
+        </table>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:1px solid ${C.lineSoft};border-radius:24px;overflow:hidden;">
+          <tr><td style="padding:36px 36px 8px;">
+            <div style="font-size:12px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:${C.inkSoft};">Smart Glasses</div>
           </td></tr>
-          <tr><td style="padding:8px 32px 32px;color:#e7ecf7;">
-            <h1 style="margin:0 0 12px;font-size:22px;line-height:1.25;color:#ffffff;">${escapeHtml(opts.title)}</h1>
+          <tr><td style="padding:8px 36px 36px;color:${C.ink};">
+            <h1 style="margin:0 0 16px;font-size:28px;line-height:1.15;font-weight:700;letter-spacing:-0.02em;color:${C.ink};">${escapeHtml(opts.title)}</h1>
             ${opts.body}
           </td></tr>
-          <tr><td style="padding:20px 32px;border-top:1px solid #22305c;color:#7f8db3;font-size:12px;line-height:1.6;">
-            Você recebeu este e-mail porque fez um pedido em nossa loja.<br/>
+        </table>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;">
+          <tr><td style="padding:20px 8px;color:${C.inkSoft};font-size:12px;line-height:1.6;">
+            Você recebeu este e-mail porque fez um pedido em nossa loja.
             Em caso de dúvida, basta responder a esta mensagem.<br/>
-            Óculos Inteligentes IA${storeLink}
+            Smart Glasses · Auhelab${storeLink}
           </td></tr>
         </table>
       </td></tr>
@@ -101,12 +143,12 @@ export function emailLayout(opts: { title: string; body: string; preheader?: str
 </html>`;
 }
 
-/** Botão call-to-action reutilizável (só renderiza quando há URL). */
+/** Botão call-to-action: a mesma pílula verde do site (só renderiza com URL). */
 export function ctaButton(label: string, url: string): string {
   if (!url) return "";
-  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:20px 0 4px;">
-    <tr><td style="border-radius:10px;background:linear-gradient(90deg,#6d5cff,#39b6ff);">
-      <a href="${escapeHtml(url)}" style="display:inline-block;padding:12px 26px;font-size:15px;font-weight:700;color:#ffffff;text-decoration:none;">${escapeHtml(label)}</a>
+  return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 8px;">
+    <tr><td style="border-radius:999px;background:${C.accent};">
+      <a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 30px;font-family:${EMAIL_FONT};font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">${escapeHtml(label)}</a>
     </td></tr>
   </table>`;
 }
