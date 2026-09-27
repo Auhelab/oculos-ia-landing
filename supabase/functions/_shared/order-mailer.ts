@@ -153,9 +153,12 @@ const SALES_NOTIFY_EMAIL = Deno.env.get("SALES_NOTIFY_EMAIL")?.trim() ?? "";
 async function notifySaleOnce(supabase: SupabaseClient, orderId: string): Promise<void> {
   if (!SALES_NOTIFY_EMAIL) return;
 
+  // Instante da aprovação: é quando a venda de fato acontece, e é o horário
+  // que aparece no aviso (o created_at é de quando o checkout foi aberto).
+  const aprovadoEm = new Date().toISOString();
   const { data, error } = await supabase
     .from("orders")
-    .update({ sale_notified_at: new Date().toISOString() })
+    .update({ sale_notified_at: aprovadoEm })
     .eq("id", orderId)
     .is("sale_notified_at", null)
     .select(ORDER_COLUMNS)
@@ -171,7 +174,7 @@ async function notifySaleOnce(supabase: SupabaseClient, orderId: string): Promis
   const ok = await sendEmail({
     to: SALES_NOTIFY_EMAIL,
     subject: `PAGAMENTO CONFIRMADO ${formatBRL(order.amount_cents)}`,
-    html: saleNotificationHtml(order),
+    html: saleNotificationHtml(order, aprovadoEm),
   });
 
   if (!ok) {
@@ -179,7 +182,7 @@ async function notifySaleOnce(supabase: SupabaseClient, orderId: string): Promis
   }
 }
 
-function saleNotificationHtml(o: OrderRow): string {
+function saleNotificationHtml(o: OrderRow, aprovadoEm: string): string {
   const label = orderLabel(o);
   const body = `
     ${paragraph(`Entrou uma venda nova: pedido ${strong(escapeHtml(label))}, no valor de ${strong(formatBRL(o.amount_cents))}.`)}
@@ -187,7 +190,7 @@ function saleNotificationHtml(o: OrderRow): string {
       ["Pedido", mono(label)],
       ["Valor", `<strong style="color:#1d1d1f;font-size:16px;">${formatBRL(o.amount_cents)}</strong>`],
       ["Forma de pagamento", escapeHtml(paymentMethodLabel(o.payment_method))],
-      ["Data", escapeHtml(orderDate(o.created_at))],
+      ["Data e hora", escapeHtml(dateTimeBR(aprovadoEm))],
       ["Cliente", escapeHtml(o.customer_name.trim())],
       ["E-mail", escapeHtml(o.customer_email)],
     ])}
@@ -305,6 +308,16 @@ function paymentMethodLabel(method: string | null): string {
     debelo: "Débito Elo",
   };
   return brands[method] ?? "Cartão";
+}
+
+/** Data e hora no fuso de Brasília (ex.: 26/09/2026 às 21:35:08). */
+function dateTimeBR(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return "Não informada";
+  const tz = { timeZone: "America/Sao_Paulo" } as const;
+  const data = d.toLocaleDateString("pt-BR", tz);
+  const hora = d.toLocaleTimeString("pt-BR", { ...tz, hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  return `${data} às ${hora}`;
 }
 
 /** Data do pedido no fuso de Brasília (ex.: 17/09/2026). */
