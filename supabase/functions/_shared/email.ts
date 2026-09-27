@@ -143,12 +143,16 @@ export function emailLayout(opts: { title: string; body: string; preheader?: str
 </html>`;
 }
 
-/** Botão call-to-action: a mesma pílula verde do site (só renderiza com URL). */
+/**
+ * Botão call-to-action: a mesma pílula verde do site (só renderiza com URL).
+ * O verde vai também como background-image: o modo escuro do Gmail no iPhone
+ * apaga background-color e o botão sumia, mas não mexe em gradiente.
+ */
 export function ctaButton(label: string, url: string): string {
   if (!url) return "";
   return `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:24px 0 8px;">
-    <tr><td style="border-radius:999px;background:${C.accent};">
-      <a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 30px;font-family:${EMAIL_FONT};font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;">${escapeHtml(label)}</a>
+    <tr><td bgcolor="${C.accent}" style="border-radius:999px;background-color:${C.accent};background-image:linear-gradient(${C.accent},${C.accent});">
+      <a href="${escapeHtml(url)}" style="display:inline-block;padding:14px 30px;font-family:${EMAIL_FONT};font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:999px;background-image:linear-gradient(${C.accent},${C.accent});">${escapeHtml(label)}</a>
     </td></tr>
   </table>`;
 }

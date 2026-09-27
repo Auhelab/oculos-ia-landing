@@ -192,7 +192,7 @@ function stepsList(steps: Array<{ title: string; text: string; state: "done" | "
   const rows = steps
     .map((s, i) => {
       const dot = s.state === "done"
-        ? `<div style="width:22px;height:22px;border-radius:11px;background:#15803d;color:#ffffff;font-size:13px;font-weight:700;line-height:22px;text-align:center;">✓</div>`
+        ? `<div style="width:20px;height:20px;border-radius:11px;border:1px solid #15803d;color:#15803d;font-size:13px;font-weight:700;line-height:20px;text-align:center;">✓</div>`
         : s.state === "current"
         ? `<div style="width:20px;height:20px;border-radius:11px;border:1px solid #15803d;color:#15803d;font-size:12px;font-weight:700;line-height:20px;text-align:center;">${i + 1}</div>`
         : `<div style="width:20px;height:20px;border-radius:11px;border:1px solid #d2d2d7;color:#6e6e73;font-size:12px;line-height:20px;text-align:center;">${i + 1}</div>`;
